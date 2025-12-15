@@ -1,0 +1,35 @@
+{
+  "rules": {
+    "users": {
+      ".indexOn": ["createdAt", "lastSeen"],
+      "$userId": {
+        ".read": "true",
+        ".write": "auth != null && auth.uid === $userId"
+      }
+    },
+    "chats": {
+      ".indexOn": ["updatedAt"],
+      "$chatId": {
+        ".read": "auth != null && root.child('chats').child($chatId).child('participants').hasChild(auth.uid)",
+        ".write": "auth != null && root.child('chats').child($chatId).child('participants').hasChild(auth.uid)",
+        "messages": {
+          ".indexOn": ["timestamp"],
+          "$messageId": {
+            ".read": "auth != null && root.child('chats').child($chatId).child('participants').hasChild(auth.uid)",
+            ".write": "auth != null && root.child('chats').child($chatId).child('participants').hasChild(auth.uid)"
+          }
+        }
+      }
+    },
+    "announcements": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() === true"
+    },
+    "_connection_test": {
+      "$docId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}

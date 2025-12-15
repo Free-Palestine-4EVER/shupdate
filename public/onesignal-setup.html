@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shhhhh Chat Notifications</title>
+  <link rel="manifest" href="/notification-manifest.json">
+  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function() {
+      OneSignal.init({
+        appId: "bf14367a-a8d6-4248-bd86-d074a56514af",
+        notifyButton: {
+          enable: true,
+        },
+        subdomainName: "shhhhh-chat",
+        promptOptions: {
+          slidedown: {
+            enabled: true,
+            actionMessage: "Subscribe to Shhhhh Chat notifications",
+          }
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>Shhhhh Chat Notification Setup</h1>
+  <p>Please click "Allow" to enable notifications from Shhhhh Chat.</p>
+  <button onclick="OneSignal.showSlidedownPrompt()">Enable Notifications</button>
+</body>
+</html>

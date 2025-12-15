@@ -1,0 +1,60 @@
+{
+  "rules": {
+    "users": {
+      ".indexOn": ["createdAt", "lastSeen"],
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'zzzz'",
+      "$userId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (auth.uid === $userId || auth.uid === 'zzzz')"
+      }
+    },
+    "payments": {
+      ".read": "auth != null && auth.uid === 'zzzz'",
+      ".write": "auth != null",
+      "$paymentId": {
+        ".read": "auth != null && (auth.uid === root.child('payments').child($paymentId).child('userId').val() || auth.uid === 'zzzz')",
+        ".write": "auth != null && (auth.uid === root.child('payments').child($paymentId).child('userId').val() || auth.uid === 'zzzz')"
+      }
+    },
+    "chats": {
+      ".indexOn": ["updatedAt"],
+      ".read": "auth != null && auth.uid === 'zzzz'",
+      "$chatId": {
+        ".read": "auth != null && (root.child('chats').child($chatId).child('participants').hasChild(auth.uid) || auth.uid === 'zzzz')",
+        ".write": "auth != null && (root.child('chats').child($chatId).child('participants').hasChild(auth.uid) || auth.uid === 'zzzz')",
+        "messages": {
+          ".indexOn": ["timestamp"],
+          ".read": "auth != null && (root.child('chats').child($chatId).child('participants').hasChild(auth.uid) || auth.uid === 'zzzz')",
+          ".write": "auth != null && (root.child('chats').child($chatId).child('participants').hasChild(auth.uid) || auth.uid === 'zzzz')"
+        }
+      }
+    },
+    "groups": {
+      ".indexOn": ["updatedAt"],
+      ".read": "auth != null && auth.uid === 'zzzz'",
+      "$groupId": {
+        ".read": "auth != null && (root.child('groups').child($groupId).child('participants').hasChild(auth.uid) || auth.uid === 'zzzz')",
+        ".write": "auth != null && (root.child('groups').child($groupId).child('participants').hasChild(auth.uid) || root.child('groups').child($groupId).child('admins').hasChild(auth.uid) || auth.uid === 'zzzz')",
+        "messages": {
+          ".indexOn": ["timestamp"],
+          ".read": "auth != null && (root.child('groups').child($groupId).child('participants').hasChild(auth.uid) || auth.uid === 'zzzz')",
+          ".write": "auth != null && (root.child('groups').child($groupId).child('participants').hasChild(auth.uid) || auth.uid === 'zzzz')"
+        }
+      }
+    },
+    "presence": {
+      ".read": "auth != null",
+      "$userId": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $userId"
+      }
+    },
+    "announcements": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'zzzz'"
+    },
+    ".read": "auth != null && auth.uid === 'zzzz'",
+    ".write": "auth != null && auth.uid === 'zzzz'"
+  }
+}
