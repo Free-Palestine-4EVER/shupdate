@@ -1344,8 +1344,8 @@ export default function ChatWindow({
       }
 
       // Delete the message from the database
-      const messageRef = dbRef(db, `messages/${selectedChat}/${message.id}`)
-      await remove(messageRef)
+      const msgRef = dbRef(db, `messages/${selectedChat}/${message.id}`)
+      await remove(msgRef)
 
       // If this was the last message in the chat, update the last message
       const chatRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}`)
