@@ -467,15 +467,15 @@ export default function UserManagement() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div>
 
-          
+
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
-                 variant="outline"
-                 disabled={isProvisioningKeys}
-                 className="border-blue-600 text-blue-500 hover:bg-blue-900/20 w-full sm:w-auto"
+                variant="outline"
+                disabled={isProvisioningKeys}
+                className="border-blue-600 text-blue-500 hover:bg-blue-900/20 w-full sm:w-auto"
               >
                 {isProvisioningKeys ? (
                   <><RefreshCw className="h-4 w-4 mr-1 animate-spin" /> Provisioning...</>
@@ -484,7 +484,7 @@ export default function UserManagement() {
                 )}
               </Button>
             </AlertDialogTrigger>
-             <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
+            <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
               <AlertDialogHeader>
                 <AlertDialogTitle className="flex items-center text-blue-500">
                   <Key className="mr-2 h-5 w-5" />
@@ -513,239 +513,240 @@ export default function UserManagement() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div >
-      </div >
-
-    <div className="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden">
-      {/* User list */}
-      <div className="w-full md:w-1/2 overflow-auto bg-gray-900/30 rounded-md border border-gray-800">
-        <div className="p-3 border-b border-gray-800">
-          <h3 className="font-medium text-white">Users ({filteredUsers.length})</h3>
         </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center p-8">
-            <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <div className="p-4 text-center text-gray-400">
-            {searchQuery ? "No users match your search" : "No users found"}
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-800">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className={`p-3 hover:bg-gray-800 cursor-pointer ${selectedUser?.id === user.id ? "bg-gray-800" : ""}`}
-                onClick={() => setSelectedUser(user)}
-              >
-                <div className="flex items-center space-x-3">
-                  {user.photoURL && (
-                    <Image
-                      src={user.photoURL || "/placeholder.svg"}
-                      alt={user.username || "User"}
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center">
-                      <p className="font-medium text-white truncate">{user.username || "Unnamed User"}</p>
-                      {user.isBanned && (
-                        <Badge variant="destructive" className="ml-2">
-                          Banned
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-400 truncate">{user.email}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* User details */}
-      <div className="w-full md:w-1/2 overflow-auto bg-gray-900/30 rounded-md border border-gray-800">
-        {selectedUser ? (
-          <div>
-            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-              <h3 className="font-medium text-white">User Details</h3>
-              <div className="flex space-x-2">
-                <Button
-                  variant={selectedUser.isBanned ? "outline" : "destructive"}
-                  size="sm"
-                  onClick={() => handleToggleBan(selectedUser.id, selectedUser.isBanned)}
-                >
-                  {selectedUser.isBanned ? (
-                    <>
-                      <CheckCircle className="h-4 w-4 mr-1" /> Unban
-                    </>
-                  ) : (
-                    <>
-                      <UserX className="h-4 w-4 mr-1" /> Ban
-                    </>
-                  )}
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleEditProfile}>
-                  <Edit className="h-4 w-4 mr-1" /> Edit
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" disabled={isDeleting}>
-                      {isDeleting ? (
-                        <><RefreshCw className="h-4 w-4 mr-1 animate-spin" /> Deleting...</>
-                      ) : (
-                        <><Trash2 className="h-4 w-4 mr-1" /> Delete</>
-                      )}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="flex items-center text-red-500">
-                        <AlertTriangle className="mr-2 h-5 w-5" />
-                        Delete User Permanently
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="text-gray-300">
-                        This will <strong>PERMANENTLY DELETE</strong> user <strong>{selectedUser.username}</strong> and:
-                        <ul className="list-disc list-inside mt-2 space-y-1">
-                          <li>All their chats and messages</li>
-                          <li>All chats they participated in (other users will lose these chats too)</li>
-                          <li>Their payments and security data</li>
-                          <li>Group memberships</li>
-                        </ul>
-                        <br />
-                        This action <strong>CANNOT BE UNDONE</strong>.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700">
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDeleteUser}
-                        className="bg-red-600 hover:bg-red-700 text-white border-red-600"
-                      >
-                        Yes, Delete User
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+
+      <div className="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden">
+        {/* User list */}
+        <div className="w-full md:w-1/2 overflow-auto bg-gray-900/30 rounded-md border border-gray-800">
+          <div className="p-3 border-b border-gray-800">
+            <h3 className="font-medium text-white">Users ({filteredUsers.length})</h3>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
             </div>
-
-            <div className="p-4">
-              <div className="flex flex-col items-center mb-4">
-                {selectedUser.photoURL && (
-                  <div className="relative mb-2">
-                    <Image
-                      src={selectedUser.photoURL || "/placeholder.svg"}
-                      alt={selectedUser.username || "User"}
-                      width={100}
-                      height={100}
-                      className="rounded-full object-cover"
-                    />
+          ) : filteredUsers.length === 0 ? (
+            <div className="p-4 text-center text-gray-400">
+              {searchQuery ? "No users match your search" : "No users found"}
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-800">
+              {filteredUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className={`p-3 hover:bg-gray-800 cursor-pointer ${selectedUser?.id === user.id ? "bg-gray-800" : ""}`}
+                  onClick={() => setSelectedUser(user)}
+                >
+                  <div className="flex items-center space-x-3">
+                    {user.photoURL && (
+                      <Image
+                        src={user.photoURL || "/placeholder.svg"}
+                        alt={user.username || "User"}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center">
+                        <p className="font-medium text-white truncate">{user.username || "Unnamed User"}</p>
+                        {user.isBanned && (
+                          <Badge variant="destructive" className="ml-2">
+                            Banned
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-400 truncate">{user.email}</p>
+                    </div>
                   </div>
-                )}
-                <Button variant="outline" size="sm" onClick={handleResetProfilePicture} className="mt-2">
-                  Reset Profile Picture
-                </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* User details */}
+        <div className="w-full md:w-1/2 overflow-auto bg-gray-900/30 rounded-md border border-gray-800">
+          {selectedUser ? (
+            <div>
+              <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+                <h3 className="font-medium text-white">User Details</h3>
+                <div className="flex space-x-2">
+                  <Button
+                    variant={selectedUser.isBanned ? "outline" : "destructive"}
+                    size="sm"
+                    onClick={() => handleToggleBan(selectedUser.id, selectedUser.isBanned)}
+                  >
+                    {selectedUser.isBanned ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-1" /> Unban
+                      </>
+                    ) : (
+                      <>
+                        <UserX className="h-4 w-4 mr-1" /> Ban
+                      </>
+                    )}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleEditProfile}>
+                    <Edit className="h-4 w-4 mr-1" /> Edit
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" disabled={isDeleting}>
+                        {isDeleting ? (
+                          <><RefreshCw className="h-4 w-4 mr-1 animate-spin" /> Deleting...</>
+                        ) : (
+                          <><Trash2 className="h-4 w-4 mr-1" /> Delete</>
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center text-red-500">
+                          <AlertTriangle className="mr-2 h-5 w-5" />
+                          Delete User Permanently
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-300">
+                          This will <strong>PERMANENTLY DELETE</strong> user <strong>{selectedUser.username}</strong> and:
+                          <ul className="list-disc list-inside mt-2 space-y-1">
+                            <li>All their chats and messages</li>
+                            <li>All chats they participated in (other users will lose these chats too)</li>
+                            <li>Their payments and security data</li>
+                            <li>Group memberships</li>
+                          </ul>
+                          <br />
+                          This action <strong>CANNOT BE UNDONE</strong>.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700">
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteUser}
+                          className="bg-red-600 hover:bg-red-700 text-white border-red-600"
+                        >
+                          Yes, Delete User
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-400">Username</p>
-                  <p className="font-medium text-white">{selectedUser.username || "Not set"}</p>
+              <div className="p-4">
+                <div className="flex flex-col items-center mb-4">
+                  {selectedUser.photoURL && (
+                    <div className="relative mb-2">
+                      <Image
+                        src={selectedUser.photoURL || "/placeholder.svg"}
+                        alt={selectedUser.username || "User"}
+                        width={100}
+                        height={100}
+                        className="rounded-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <Button variant="outline" size="sm" onClick={handleResetProfilePicture} className="mt-2">
+                    Reset Profile Picture
+                  </Button>
                 </div>
 
-                <div>
-                  <p className="text-sm text-gray-400">Email</p>
-                  <p className="font-medium text-white">{selectedUser.email || "Not set"}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-400">User ID</p>
-                  <p className="font-mono text-xs bg-gray-800 p-1 rounded mt-1">{selectedUser.id}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-400">Account Created</p>
-                  <p className="font-medium text-white">
-                    {selectedUser.createdAt
-                      ? formatDistanceToNow(new Date(selectedUser.createdAt), { addSuffix: true })
-                      : "Unknown"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-400">Last Seen</p>
-                  <p className="font-medium text-white">
-                    {selectedUser.lastSeen
-                      ? formatDistanceToNow(new Date(selectedUser.lastSeen), { addSuffix: true })
-                      : "Never"}
-                  </p>
-                </div>
-
-                {selectedUser.isBanned && (
+                <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-400">Banned At</p>
-                    <p className="font-medium text-red-400">
-                      {selectedUser.bannedAt
-                        ? formatDistanceToNow(new Date(selectedUser.bannedAt), { addSuffix: true })
+                    <p className="text-sm text-gray-400">Username</p>
+                    <p className="font-medium text-white">{selectedUser.username || "Not set"}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-400">Email</p>
+                    <p className="font-medium text-white">{selectedUser.email || "Not set"}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-400">User ID</p>
+                    <p className="font-mono text-xs bg-gray-800 p-1 rounded mt-1">{selectedUser.id}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-400">Account Created</p>
+                    <p className="font-medium text-white">
+                      {selectedUser.createdAt
+                        ? formatDistanceToNow(new Date(selectedUser.createdAt), { addSuffix: true })
                         : "Unknown"}
                     </p>
                   </div>
-                )}
+
+                  <div>
+                    <p className="text-sm text-gray-400">Last Seen</p>
+                    <p className="font-medium text-white">
+                      {selectedUser.lastSeen
+                        ? formatDistanceToNow(new Date(selectedUser.lastSeen), { addSuffix: true })
+                        : "Never"}
+                    </p>
+                  </div>
+
+                  {selectedUser.isBanned && (
+                    <div>
+                      <p className="text-sm text-gray-400">Banned At</p>
+                      <p className="font-medium text-red-400">
+                        {selectedUser.bannedAt
+                          ? formatDistanceToNow(new Date(selectedUser.bannedAt), { addSuffix: true })
+                          : "Unknown"}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">Select a user to view details</div>
-        )}
-      </div>
-    </div>
-
-  {/* Edit Profile Dialog */ }
-  <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-    <DialogContent className="sm:max-w-md auth-card">
-      <DialogHeader>
-        <DialogTitle className="text-white">Edit User Profile</DialogTitle>
-      </DialogHeader>
-
-      <div className="py-4">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="username" className="text-sm text-gray-400">
-              Username
-            </label>
-            <Input
-              id="username"
-              value={editUsername}
-              onChange={(e) => setEditUsername(e.target.value)}
-              className="custom-input"
-            />
-          </div>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400">Select a user to view details</div>
+          )}
         </div>
       </div>
 
-      <DialogFooter>
-        <Button variant="outline" onClick={() => setShowEditDialog(false)} className="border-gray-700">
-          Cancel
-        </Button>
-        <Button onClick={handleSaveProfile} disabled={isSaving || !editUsername.trim()} className="btn-primary">
-          {isSaving ? (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Saving...
-            </>
-          ) : (
-            "Save Changes"
-          )}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
+      {/* Edit Profile Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-md auth-card">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit User Profile</DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="username" className="text-sm text-gray-400">
+                  Username
+                </label>
+                <Input
+                  id="username"
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  className="custom-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)} className="border-gray-700">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={isSaving || !editUsername.trim()} className="btn-primary">
+              {isSaving ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div >
   )
 }
