@@ -8,10 +8,22 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Search, UserX, Edit, RefreshCw, CheckCircle } from "lucide-react"
+import { Search, UserX, Edit, RefreshCw, CheckCircle, Trash2, AlertTriangle, RotateCcw } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
+import { adminDeleteUserCompletely, resetAllPasscodesForFreshStart, resetPasscodesOnly } from "@/lib/admin-delete-user"
 
 export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([])
@@ -26,6 +38,8 @@ export default function UserManagement() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [userIdToVerify, setUserIdToVerify] = useState("")
   const [verifyStatus, setVerifyStatus] = useState<{ message: string; isError: boolean } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isResettingPasscodes, setIsResettingPasscodes] = useState(false)
 
   // Fetch all users
   useEffect(() => {
@@ -240,6 +254,61 @@ export default function UserManagement() {
     }
   }
 
+  // Handle delete user completely
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return
+
+    setIsDeleting(true)
+    setError(null)
+
+    try {
+      const result = await adminDeleteUserCompletely(selectedUser.id)
+
+      if (result.success) {
+        // Remove user from local state
+        setUsers(users.filter((user) => user.id !== selectedUser.id))
+        setFilteredUsers(filteredUsers.filter((user) => user.id !== selectedUser.id))
+        setSelectedUser(null)
+
+        setSuccessMessage(
+          `User deleted successfully. Removed ${result.deletedChats} chats, ${result.deletedMessages} messages, ${result.deletedGroups} groups.`
+        )
+        setTimeout(() => setSuccessMessage(null), 5000)
+      } else {
+        setError(`Failed to delete user: ${result.error}`)
+      }
+    } catch (error: any) {
+      console.error("Error deleting user:", error)
+      setError(`Failed to delete user: ${error.message}`)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  // Handle reset all passcodes
+  const handleResetAllPasscodes = async () => {
+    setIsResettingPasscodes(true)
+    setError(null)
+
+    try {
+      const result = await resetAllPasscodesForFreshStart()
+
+      if (result.success) {
+        setSuccessMessage(
+          `Fresh start initiated! Reset passcodes for ${result.resetCount} users. All users will need to set up new PINs and encryption keys.`
+        )
+        setTimeout(() => setSuccessMessage(null), 5000)
+      } else {
+        setError(`Failed to reset passcodes: ${result.error}`)
+      }
+    } catch (error: any) {
+      console.error("Error resetting passcodes:", error)
+      setError(`Failed to reset passcodes: ${error.message}`)
+    } finally {
+      setIsResettingPasscodes(false)
+    }
+  }
+
   return (
     <div className="h-full flex flex-col">
       {error && (
@@ -262,7 +331,7 @@ export default function UserManagement() {
         </Alert>
       )}
 
-      <div className="mb-4 flex items-center space-x-4">
+      <div className="mb-4 flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
           <Input
@@ -272,16 +341,62 @@ export default function UserManagement() {
             className="pl-8 custom-input"
           />
         </div>
-        <div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
           <Input
             placeholder="User ID to Verify"
             value={userIdToVerify}
             onChange={(e) => setUserIdToVerify(e.target.value)}
-            className="custom-input w-40"
+            className="custom-input sm:w-40"
           />
-          <Button onClick={handleVerifyUser} className="btn-primary ml-2">
+          <Button onClick={handleVerifyUser} className="btn-primary w-full sm:w-auto">
             Verify User
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={isResettingPasscodes}
+                className="border-orange-600 text-orange-500 hover:bg-orange-900/20 w-full sm:w-auto"
+              >
+                {isResettingPasscodes ? (
+                  <><RefreshCw className="h-4 w-4 mr-1 animate-spin" /> Resetting...</>
+                ) : (
+                  <><RotateCcw className="h-4 w-4 mr-1" /> Reset All PINs</>
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center text-orange-500">
+                  <AlertTriangle className="mr-2 h-5 w-5" />
+                  Reset All Passcodes - Fresh Start
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-gray-300">
+                  This will reset <strong>ALL USER PASSCODES</strong>, device registrations, and encryption keys.
+                  <br /><br />
+                  <strong>Every user will need to:</strong>
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>Set up a new PIN on their next login</li>
+                    <li>Re-register their device</li>
+                    <li>Generate new encryption keys</li>
+                  </ul>
+                  <br />
+                  Are you sure you want to proceed?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700">
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleResetAllPasscodes}
+                  className="bg-orange-600 hover:bg-orange-700 text-white border-orange-600"
+                >
+                  Yes, Reset All
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -361,6 +476,47 @@ export default function UserManagement() {
                   <Button variant="outline" size="sm" onClick={handleEditProfile}>
                     <Edit className="h-4 w-4 mr-1" /> Edit
                   </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" disabled={isDeleting}>
+                        {isDeleting ? (
+                          <><RefreshCw className="h-4 w-4 mr-1 animate-spin" /> Deleting...</>
+                        ) : (
+                          <><Trash2 className="h-4 w-4 mr-1" /> Delete</>
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center text-red-500">
+                          <AlertTriangle className="mr-2 h-5 w-5" />
+                          Delete User Permanently
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-300">
+                          This will <strong>PERMANENTLY DELETE</strong> user <strong>{selectedUser.username}</strong> and:
+                          <ul className="list-disc list-inside mt-2 space-y-1">
+                            <li>All their chats and messages</li>
+                            <li>All chats they participated in (other users will lose these chats too)</li>
+                            <li>Their payments and security data</li>
+                            <li>Group memberships</li>
+                          </ul>
+                          <br />
+                          This action <strong>CANNOT BE UNDONE</strong>.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700">
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteUser}
+                          className="bg-red-600 hover:bg-red-700 text-white border-red-600"
+                        >
+                          Yes, Delete User
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
 

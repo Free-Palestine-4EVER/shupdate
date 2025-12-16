@@ -61,7 +61,7 @@ export default function AdminPanel() {
           </TabsTrigger>
         </TabsList>
 
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4">
           <TabsContent value="devices" className="h-full mt-0">
             <DeviceRequests />
           </TabsContent>

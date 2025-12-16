@@ -18,7 +18,9 @@ export const metadata = {
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,
+    minimumScale: 1,
     userScalable: false,
+    viewportFit: "cover",
   },
   icons: {
     icon: [
@@ -32,7 +34,7 @@ export const metadata = {
       { url: "/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
     ],
   },
-    generator: 'v0.app'
+  generator: 'v0.app'
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -45,8 +47,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `
           /* Critical CSS Fallback - ensures styling works even if Tailwind fails */
           *, *::before, *::after { box-sizing: border-box !important; }
-          html, body { margin: 0 !important; padding: 0 !important; min-height: 100vh !important; }
-          body { background-color: #000 !important; color: #fff !important; font-family: system-ui, -apple-system, sans-serif !important; }
+          html, body { margin: 0 !important; padding: 0 !important; min-height: 100vh !important; touch-action: pan-x pan-y !important; }
+          body { background-color: #000 !important; color: #fff !important; font-family: system-ui, -apple-system, sans-serif !important; touch-action: pan-x pan-y !important; }
+          * { touch-action: manipulation !important; -ms-touch-action: manipulation !important; }
           
           /* Flexbox utilities */
           .flex { display: flex !important; }

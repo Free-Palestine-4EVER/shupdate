@@ -360,44 +360,65 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
     setNotificationSuccess(false)
 
     try {
-      // Prioritize OneSignal if available (Custom UI -> System UI)
-      if (window.OneSignal) {
+      // Check current notification permission status
+      const currentPermission = Notification.permission
+
+      // If already granted, just ensure OneSignal is set up
+      if (currentPermission === "granted" && window.OneSignal) {
+        console.log("Permission already granted, ensuring OneSignal registration...")
+
         try {
-          // Check if already registered
-          const subscriptionId = await window.OneSignal.User.PushSubscription.id
-          const isOptedIn = await window.OneSignal.User.PushSubscription.optedIn
-
-          console.log("OneSignal Status - ID:", subscriptionId, "OptedIn:", isOptedIn)
-
-          if (!subscriptionId || !isOptedIn) {
-            console.log("User not fully registered. Triggering prompt.")
-            await window.OneSignal.showSlidedownPrompt()
-          } else {
-            console.log("User already registered. Skipping prompt.")
-            // Might help to ensure login sync
-            if (user && user.id) {
-              window.OneSignal.login(user.id)
-            }
-          }
-
-          // Also identify user immediately if logging in
+          // Login user to OneSignal
           if (user && user.id) {
             await window.OneSignal.login(user.id)
+            console.log("OneSignal user logged in:", user.id)
           }
+
+          // Check if opted in
+          const isOptedIn = await window.OneSignal.User.PushSubscription.optedIn
+          if (!isOptedIn) {
+            console.log("User not opted in, opting in now...")
+            await window.OneSignal.User.PushSubscription.optIn()
+          }
+
+          // Get subscription ID
+          const subscriptionId = await window.OneSignal.User.PushSubscription.id
+          console.log("OneSignal subscription ID:", subscriptionId)
+
+          setNotificationSuccess(true)
+          localStorage.setItem("notifications_allowed", "true")
+          localStorage.setItem("clicked_allow_notification_button", "true")
+
+          if (user && user.id) {
+            const userRef = dbRef(db, `users/${user.id}`)
+            update(userRef, {
+              notificationsAllowed: true,
+              clickedAllowNotificationButton: true,
+              notificationsAllowedAt: new Date().toISOString(),
+            }).catch((err) => console.error("Error saving notification status:", err))
+          }
+
+          toast({
+            title: "Notifications Enabled",
+            description: "You will now receive notifications.",
+          })
+          return
         } catch (e) {
-          console.error("OneSignal prompt error:", e)
+          console.error("Error setting up OneSignal:", e)
         }
       }
 
-      // Then request native permission (triggers system modal if OneSignal didn't, or confirms status)
+      // Request native permission first
       const permission = await Notification.requestPermission()
 
       if (permission === "granted") {
+        console.log("Native permission granted, setting up OneSignal...")
+
         setNotificationSuccess(true)
         localStorage.setItem("notifications_allowed", "true")
         localStorage.setItem("clicked_allow_notification_button", "true")
 
-        // Also save to database for this user
+        // Save to database
         if (user && user.id) {
           const userRef = dbRef(db, `users/${user.id}`)
           update(userRef, {
@@ -407,12 +428,44 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
           }).catch((err) => console.error("Error saving notification status:", err))
         }
 
-        // Final verification with OneSignal
+        // Now set up OneSignal
         if (window.OneSignal) {
-          // Ensure opt-in if permission granted
-          const isOptedOut = await window.OneSignal.User.PushSubscription.optedOut
-          if (isOptedOut) {
-            await window.OneSignal.User.PushSubscription.optIn()
+          try {
+            // Login user to OneSignal
+            if (user && user.id) {
+              await window.OneSignal.login(user.id)
+              console.log("OneSignal user logged in:", user.id)
+            }
+
+            // Check if already subscribed
+            const subscriptionId = await window.OneSignal.User.PushSubscription.id
+            const isOptedIn = await window.OneSignal.User.PushSubscription.optedIn
+
+            console.log("OneSignal Status - ID:", subscriptionId, "OptedIn:", isOptedIn)
+
+            if (!subscriptionId || !isOptedIn) {
+              console.log("User not fully registered with OneSignal. Triggering opt-in...")
+
+              // Opt in to push notifications
+              await window.OneSignal.User.PushSubscription.optIn()
+              console.log("OneSignal opt-in successful")
+
+              // Also show slidedown for confirmation (optional)
+              try {
+                await window.OneSignal.showSlidedownPrompt()
+              } catch (slidedownError) {
+                console.log("Slidedown already shown or not needed:", slidedownError)
+              }
+            } else {
+              console.log("User already registered with OneSignal")
+            }
+
+            // Verify subscription
+            const finalSubscriptionId = await window.OneSignal.User.PushSubscription.id
+            console.log("Final OneSignal subscription ID:", finalSubscriptionId)
+
+          } catch (e) {
+            console.error("OneSignal setup error:", e)
           }
         }
 
@@ -584,12 +637,6 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
                             <div className="font-medium">Lifetime</div>
                           </div>
                         </div>
-                      )}
-
-                      {!isLifetime && (
-                        <Button onClick={goToPaymentVerify} className="w-full bg-pink-500 hover:bg-pink-600">
-                          {subscriptionPlan !== "Free" ? "Extend Subscription" : "Upgrade Subscription"}
-                        </Button>
                       )}
                     </div>
                   )}

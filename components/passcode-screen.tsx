@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { verifyPasscode, setSessionVerified } from "@/lib/passcode-utils"
 import { db } from "@/lib/firebase"
-import { ref, get } from "firebase/database"
+import { ref, get, update } from "firebase/database"
 import type { User } from "@/lib/types"
 import MatrixBackground from "./matrix-background"
 import { Shield, Lock, Eye, EyeOff, AlertTriangle, ScanFace } from "lucide-react"
@@ -201,8 +201,69 @@ export default function PasscodeScreen({ userId, onVerified }: PasscodeScreenPro
                 await storePrivateKey(userId, privateKey)
                 console.log("Private key restored successfully!")
               } else {
-                // Old user without encrypted key backup - they'll get it when they change PIN
-                console.log("No encrypted key backup found - user needs to change PIN to enable key sync")
+                // No encrypted backup - need to regenerate keys
+                console.log("No encrypted key backup found - regenerating encryption keys...")
+
+                // Import required functions
+                const { generateKeyPair, encryptPrivateKeyWithPasscode } = await import("@/lib/encryption")
+
+                // Generate new key pair
+                const { publicKey, privateKey: newPrivateKey } = await generateKeyPair()
+
+                // Store locally
+                await storePrivateKey(userId, newPrivateKey)
+
+                // Encrypt for cloud backup
+                const encryptedKeyData = await encryptPrivateKeyWithPasscode(newPrivateKey, passcodeString)
+
+                // Update Firebase with new keys
+                await update(userRef, {
+                  publicKey: publicKey,
+                  encryptedPrivateKey: {
+                    encryptedKey: encryptedKeyData.encryptedKey,
+                    salt: encryptedKeyData.salt,
+                    iv: encryptedKeyData.iv,
+                  }
+                })
+
+                console.log("New encryption keys generated and synced to Firebase!")
+              }
+            }
+          } else {
+            // Has local key - check if Firebase has the public key
+            const userRef = ref(db, `users/${userId}`)
+            const snapshot = await get(userRef)
+
+            if (snapshot.exists()) {
+              const userData = snapshot.val()
+
+              if (!userData.publicKey) {
+                // Local key exists but no public key in Firebase - need to sync
+                console.log("Local key found but no public key in Firebase - syncing...")
+
+                const { getPrivateKey, encryptPrivateKeyWithPasscode } = await import("@/lib/encryption")
+                const privateKey = await getPrivateKey(userId)
+
+                if (privateKey) {
+                  // Export public key
+                  const publicKeyBuffer = await crypto.subtle.exportKey("spki", privateKey)
+                  const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKeyBuffer)))
+
+                  // Encrypt private key for backup
+                  const encryptedKeyData = await encryptPrivateKeyWithPasscode(privateKey, passcodeString)
+
+                  // Update Firebase
+                  await update(userRef, {
+                    publicKey: publicKeyBase64,
+                    encryptedPrivateKey: {
+                      encryptedKey: encryptedKeyData.encryptedKey,
+                      salt: encryptedKeyData.salt,
+                      iv: encryptedKeyData.iv,
+                    }
+                  })
+
+                  console.log("Public key synced to Firebase!")
+                }
               }
             }
           }

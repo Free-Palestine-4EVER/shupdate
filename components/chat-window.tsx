@@ -605,8 +605,8 @@ export default function ChatWindow({
       const expirationMs = getExpirationMs(setting)
 
       // Update existing messages if needed
-      // We need to check all messages, not just visible ones, so we fetch from DB
-      const messagesRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages`)
+      // FIXED: Messages are stored at root level messages/{chatId}
+      const messagesRef = dbRef(db, `messages/${selectedChat}`)
       const messagesSnapshot = await get(messagesRef)
 
       if (messagesSnapshot.exists()) {
@@ -672,13 +672,14 @@ export default function ChatWindow({
     return () => unsubscribe()
   }, [selectedChat, isGroup])
 
-  // Periodic cleanup for expired messages (runs every 10 seconds)
+  // Periodic cleanup for expired messages (runs every 5 seconds)
   useEffect(() => {
     if (!currentUser || !selectedChat) return
 
     const cleanupExpiredMessages = async () => {
       try {
-        const messagesRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages`)
+        // FIXED: Messages are stored at root level messages/{chatId}, not nested under chats/groups
+        const messagesRef = dbRef(db, `messages/${selectedChat}`)
         const snapshot = await get(messagesRef)
 
         if (snapshot.exists()) {
@@ -688,9 +689,9 @@ export default function ChatWindow({
           for (const [messageId, message] of Object.entries(messagesData)) {
             const msg = message as any
             if (msg.expiresAt && msg.expiresAt < now) {
-              const messageRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages/${messageId}`)
+              const messageRef = dbRef(db, `messages/${selectedChat}/${messageId}`)
               await remove(messageRef)
-              console.log(`Auto-deleted expired message ${messageId}`)
+              console.log(`Auto-deleted expired message ${messageId} (expired at: ${new Date(msg.expiresAt).toISOString()}, now: ${new Date(now).toISOString()})`)
             }
           }
         }
@@ -699,14 +700,15 @@ export default function ChatWindow({
       }
     }
 
-    // Run cleanup every 10 seconds
-    const interval = setInterval(cleanupExpiredMessages, 10000)
+    // Run cleanup every 5 seconds (faster cleanup)
+    const interval = setInterval(cleanupExpiredMessages, 5000)
 
     // Also run immediately on mount
     cleanupExpiredMessages()
 
     return () => clearInterval(interval)
   }, [currentUser, selectedChat, isGroup])
+
 
   // Update typing status when user types
   const handleTyping = () => {
