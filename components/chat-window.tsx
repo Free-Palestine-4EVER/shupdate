@@ -792,7 +792,7 @@ export default function ChatWindow({
       const messagesRef = dbRef(db, `messages/${selectedChat}`)
       const newMessageRef = push(messagesRef)
 
-      // Prepare message data with encryption for 1-on-1 chats
+      // Prepare message data
       let messageData: any = {
         senderId: currentUser.id,
         timestamp: serverTimestamp(),
@@ -800,14 +800,13 @@ export default function ChatWindow({
       }
 
       // ENCRYPTION ENABLED - Messages encrypted with recipient's public key
+      // Falls back to plaintext if encryption fails
       if (!isGroup && selectedUser?.publicKey) {
         try {
-          // Get admin's public key for dual encryption
           const adminUserId = getAdminUserId()
           const adminUser = users.find(u => u.id === adminUserId)
           const adminPublicKey = adminUser?.publicKey
 
-          // Encrypt message for recipient and optionally for admin
           const encryptedData = await encryptMessage(
             messageToSend,
             selectedUser.publicKey,
@@ -819,7 +818,6 @@ export default function ChatWindow({
           messageData.encryptedKey = encryptedData.encryptedKey
           messageData.iv = encryptedData.iv
 
-          // Add admin encryption data if available
           if (encryptedData.encryptedTextAdmin) {
             messageData.encryptedTextAdmin = encryptedData.encryptedTextAdmin
             messageData.encryptedKeyAdmin = encryptedData.encryptedKeyAdmin
