@@ -32,28 +32,32 @@
   --foreground-rgb: 255, 255, 255;
   --background-rgb: 0, 0, 0;
 
-  /* Deep Space Gradient Colors - Updated to #000000 to #434343 */
-  --space-dark: #000000;
-  --space-mid: #1a1a1a;
-  --space-light: #434343;
-  --space-card: rgba(30, 30, 30, 0.6);
-  --space-border: rgba(255, 255, 255, 0.08);
+  /* Pure Starlink Colors - Black with minimal accents */
+  --starlink-black: #000000;
+  --starlink-card: #1a1d29;
+  --starlink-border: rgba(255, 255, 255, 0.1);
+  --starlink-text: #ffffff;
+  --starlink-text-muted: rgba(255, 255, 255, 0.6);
 
-  /* Accent Colors */
+  /* Minimal accent - only for active/online states */
+  --accent-green: #10b981;
   --accent-blue: #3b82f6;
-  --accent-purple: #8b5cf6;
-  --accent-white: #ffffff;
 
-  /* Apple-style shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  /* Message colors */
+  --message-sent-bg: #000000;
+  --message-sent-border: #ffffff;
+  --message-received-bg: #1a1d29;
+  --message-received-border: rgba(255, 255, 255, 0.2);
+
+  /* Shadows - very subtle */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
 }
 
 html,
 body {
-  background: linear-gradient(180deg, #000000 0%, #434343 100%);
+  background: #000000;
   color: rgb(var(--foreground-rgb));
   min-height: 100vh;
   position: relative;
@@ -61,7 +65,7 @@ body {
 
 body {
   min-height: 100vh;
-  background: linear-gradient(180deg, #000000 0%, #434343 100%);
+  background: #000000;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -297,27 +301,26 @@ body {
   color: rgba(255, 255, 255, 0.4);
 }
 
-/* Message Bubbles - Apple Style */
+/* Message Bubbles - Starlink + Apple Style */
 .message-bubble {
   max-width: 80%;
   word-break: break-word;
-  border-radius: 1.25rem;
+  border-radius: 18px;
   overflow: visible;
   position: relative;
   margin-right: 10px;
-  backdrop-filter: blur(10px);
-  box-shadow: var(--shadow-md);
 }
 
 .message-sent {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(139, 92, 246, 0.95) 100%);
+  background: #000000;
   color: white;
+  border: 1.5px solid #ffffff;
 }
 
 .message-received {
-  background: rgba(30, 30, 38, 0.95);
+  background: #1a1d29;
   color: white;
-  border: 1px solid var(--space-border);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Chat Components */

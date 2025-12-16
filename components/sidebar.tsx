@@ -281,9 +281,8 @@ export default function Sidebar({
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(30, 30, 30, 0.95) 50%, rgba(67, 67, 67, 0.95) 100%)",
-        backdropFilter: "blur(24px)",
-        borderRight: "1px solid rgba(255, 255, 255, 0.08)",
+        background: "#000000",
+        borderRight: "1px solid rgba(255, 255, 255, 0.1)",
         overflow: "hidden",
       }}
     >
