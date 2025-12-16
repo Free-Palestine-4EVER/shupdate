@@ -799,10 +799,15 @@ export default function ChatWindow({
         reactions: {},
       }
 
-      // ENCRYPTION OPTIONAL - Try to encrypt, but fallback to plaintext if fails
-      // This ensures messages always get sent even if keys are missing
-      let isEncrypted = false;
+      // ENCRYPTION DISABLED - Always send plaintext for now
+      // This bypasses all key checks and encryption logic
 
+      console.log("Encryption disabled. Sending plaintext message.")
+      messageData.text = messageToSend
+
+      /* ENCRYPTION LOGIC COMMENTED OUT FOR NOW
+      let isEncrypted = false;
+      
       if (!isGroup && selectedUser?.publicKey) {
         try {
           const adminUserId = getAdminUserId()
@@ -837,6 +842,7 @@ export default function ChatWindow({
         console.log("Sending plaintext message")
         messageData.text = messageToSend
       }
+      */
 
       if (isGroup) {
         // For groups, initialize readBy with current user
