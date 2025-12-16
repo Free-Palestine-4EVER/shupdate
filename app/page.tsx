@@ -8,7 +8,7 @@ import FirebaseProvider from "@/components/firebase-provider"
 import SecretCalculator from "@/components/secret-calculator"
 import { db } from "@/lib/firebase"
 import { ref, onValue, get } from "firebase/database"
-import { updateLastAccessTime, setSessionVerified } from "@/lib/passcode-utils"
+import { updateLastAccessTime, setSessionVerified, CURRENT_PASSCODE_VERSION } from "@/lib/passcode-utils"
 import AddToHomescreen from "@/components/add-to-homescreen"
 import DeviceBlockedScreen from "@/components/device-blocked-screen"
 
@@ -282,7 +282,7 @@ function AppContent() {
         .then((snapshot) => {
           if (snapshot.exists()) {
             const userData = snapshot.val()
-            const userHasPasscode = !!(userData.passcode?.hash && userData.passcode?.salt)
+            const userHasPasscode = !!(userData.passcode?.hash && userData.passcode?.salt && userData.passcode?.version === CURRENT_PASSCODE_VERSION)
             const passcodeEnabled = userData.passcode?.isEnabled !== false
 
             setHasPasscode(userHasPasscode && passcodeEnabled)

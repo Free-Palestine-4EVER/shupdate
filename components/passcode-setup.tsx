@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { generateSalt, hashPasscode } from "@/lib/passcode-utils"
+import { generateSalt, hashPasscode, CURRENT_PASSCODE_VERSION } from "@/lib/passcode-utils"
 import { db } from "@/lib/firebase"
 import { ref, update } from "firebase/database"
 import MatrixBackground from "./matrix-background"
@@ -96,6 +96,7 @@ export default function PasscodeSetup({ userId, onComplete }: PasscodeSetupProps
           hash,
           salt,
           isEnabled: true,
+          version: CURRENT_PASSCODE_VERSION,
         },
       }
 

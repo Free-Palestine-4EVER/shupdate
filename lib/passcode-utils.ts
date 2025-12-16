@@ -1,7 +1,9 @@
 import { createHash, randomBytes } from "crypto"
 
+export const CURRENT_PASSCODE_VERSION = 2
+
 // Generate a random salt
-export function generateSalt(): string {
+export const generateSalt = (): string => {
   return randomBytes(16).toString("hex")
 }
 
