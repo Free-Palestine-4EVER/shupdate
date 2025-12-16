@@ -8,7 +8,8 @@ import { db } from "@/lib/firebase"
 import { ref, get } from "firebase/database"
 import type { User } from "@/lib/types"
 import MatrixBackground from "./matrix-background"
-import { Shield, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react"
+import { Shield, Lock, Eye, EyeOff, AlertTriangle, ScanFace } from "lucide-react"
+import { verifyBiometric, isBiometricAvailable } from "@/lib/biometrics"
 import {
   checkLockoutStatus,
   recordFailedAttempt,
@@ -40,6 +41,8 @@ export default function PasscodeScreen({ userId, onVerified }: PasscodeScreenPro
   const [isLockedOut, setIsLockedOut] = useState(false)
   const [lockoutTimeRemaining, setLockoutTimeRemaining] = useState("")
   const [username, setUsername] = useState("")
+  const [biometricFailed, setBiometricFailed] = useState(false)
+  const [biometryAttempts, setBiometryAttempts] = useState(0)
   const maxAttempts = 5
 
   // Check lockout status and countdown timer
@@ -106,7 +109,58 @@ export default function PasscodeScreen({ userId, onVerified }: PasscodeScreenPro
     }
 
     fetchPasscodeData()
+    fetchPasscodeData()
   }, [userId, onVerified])
+
+  // BIOMETRIC CHECK
+  useEffect(() => {
+    if (
+      loading ||
+      isLockedOut ||
+      biometricFailed ||
+      biometryAttempts >= 2 ||
+      localStorage.getItem(`biometric_enabled_${userId}`) !== "true"
+    ) {
+      return
+    }
+
+    const tryBiometric = async () => {
+      console.log("Attempting biometric unlock...")
+      try {
+        const success = await verifyBiometric()
+        if (success) {
+          // Biometric verified!
+          // CRITICAL: We need the private key.
+          // If it's in IndexedDB (local device), we are good.
+          const hasKey = await hasEncryptionKeys(userId)
+          if (hasKey) {
+            await resetPasscodeAttempts(userId)
+            setSessionVerified(true)
+            onVerified()
+          } else {
+            // Face ID worked but we can't restore keys without the PIN
+            // (because the backup key stored in Firebase is encrypted with PIN)
+            setError("Face ID verified, but PIN is required to restore secure keys.")
+            setBiometricFailed(true) // Stop trying biometrics, force PIN
+          }
+        } else {
+          setBiometryAttempts(prev => prev + 1)
+          // If that was the 2nd fail, it will stop due to check above next render
+        }
+      } catch (err) {
+        console.error("Biometric error:", err)
+        setBiometryAttempts(prev => prev + 1)
+      }
+    }
+
+    // Small delay to let UI settle
+    const timer = setTimeout(() => {
+      tryBiometric()
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [loading, isLockedOut, biometricFailed, biometryAttempts, userId])
+
 
   useEffect(() => {
     if (passcode.length === 6 && !isVerifying && !isLockedOut) {
@@ -395,15 +449,28 @@ export default function PasscodeScreen({ userId, onVerified }: PasscodeScreenPro
       <MatrixBackground />
 
       <div style={contentStyle}>
-        <div style={headerStyle}>
-          <div style={iconContainerStyle}>
-            <div style={iconGlowStyle}></div>
-            <div style={iconStyle}>
-              <Lock style={{ width: "32px", height: "32px", color: "#fff" }} />
+        <div className="text-center mb-12">
+          <div className="relative inline-block mb-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
+            <div className="relative bg-gradient-to-r from-blue-500 to-purple-500 p-4 rounded-full">
+              {biometryAttempts < 2 && !biometricFailed && localStorage.getItem(`biometric_enabled_${userId}`) === "true" ? (
+                <ScanFace className="w-8 h-8 text-white animate-pulse" />
+              ) : (
+                <Lock className="w-8 h-8 text-white" />
+              )}
             </div>
           </div>
-          <h1 style={titleStyle}>Secure Access</h1>
-          <p style={subtitleStyle}>Enter your security code</p>
+
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent mb-3">
+            {biometryAttempts < 2 && !biometricFailed && localStorage.getItem(`biometric_enabled_${userId}`) === "true"
+              ? "Face ID / Security Code"
+              : "Enter Security Code"}
+          </h1>
+          <p className="text-gray-400 text-lg font-medium">
+            {error || (biometryAttempts < 2 && !biometricFailed && localStorage.getItem(`biometric_enabled_${userId}`) === "true"
+              ? "Scanning face or enter code..."
+              : "Enter your 6-digit security code")}
+          </p>
         </div>
 
         {error && (
