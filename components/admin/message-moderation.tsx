@@ -32,7 +32,6 @@ export default function MessageModeration() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isDeletingMessage, setIsDeletingMessage] = useState<Record<string, boolean>>({})
   const [isNuking, setIsNuking] = useState(false)
 
