@@ -1384,10 +1384,26 @@ export default function ChatWindow({
           })
         } else {
           // If there are no more messages, remove the lastMessage field
-          await update(chatRef, {
-            lastMessage: null,
-            updatedAt: serverTimestamp(),
-          })
+          // CHECK: If no messages left at all, user wants to DELETE the chat completely
+          const messagesAfterDeleteRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages`)
+          const snapshot = await get(messagesAfterDeleteRef)
+
+          if (!snapshot.exists() || snapshot.size === 0) {
+            console.log("Chat is empty after deletion. Removing chat...")
+            const chatRefFull = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}`)
+            await remove(chatRefFull)
+
+            // If it's a direct chat, we should also clean up userChats references if we want to be thorough,
+            // but normally the Sidebar handles "orphaned" chats by checking if they exist.
+            // For now, removing the chat node is the key request.
+            setSelectedChat(null)
+            if (isMobileView && onBackClick) onBackClick()
+          } else {
+            await update(chatRef, {
+              lastMessage: null,
+              updatedAt: serverTimestamp(),
+            })
+          }
         }
       }
 

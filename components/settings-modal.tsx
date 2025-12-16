@@ -363,13 +363,26 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
       // Prioritize OneSignal if available (Custom UI -> System UI)
       if (window.OneSignal) {
         try {
-          console.log("Triggering OneSignal prompt sequence")
-          await window.OneSignal.showSlidedownPrompt()
+          // Check if already registered
+          const subscriptionId = await window.OneSignal.User.PushSubscription.id
+          const isOptedIn = await window.OneSignal.User.PushSubscription.optedIn
 
-          // Also identify user immediately
+          console.log("OneSignal Status - ID:", subscriptionId, "OptedIn:", isOptedIn)
+
+          if (!subscriptionId || !isOptedIn) {
+            console.log("User not fully registered. Triggering prompt.")
+            await window.OneSignal.showSlidedownPrompt()
+          } else {
+            console.log("User already registered. Skipping prompt.")
+            // Might help to ensure login sync
+            if (user && user.id) {
+              window.OneSignal.login(user.id)
+            }
+          }
+
+          // Also identify user immediately if logging in
           if (user && user.id) {
             await window.OneSignal.login(user.id)
-            console.log("OneSignal login called for:", user.id)
           }
         } catch (e) {
           console.error("OneSignal prompt error:", e)

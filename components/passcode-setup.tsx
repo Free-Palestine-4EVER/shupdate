@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase"
 import { ref, update } from "firebase/database"
 import MatrixBackground from "./matrix-background"
 import { Shield, Lock, CheckCircle, Eye, EyeOff, Sparkles } from "lucide-react"
-import { getPrivateKey, encryptPrivateKeyWithPasscode } from "@/lib/encryption"
+import { getPrivateKey, encryptPrivateKeyWithPasscode, generateKeyPair, storePrivateKey } from "@/lib/encryption"
 
 interface PasscodeSetupProps {
   userId: string
@@ -99,6 +99,25 @@ export default function PasscodeSetup({ userId, onComplete }: PasscodeSetupProps
           version: CURRENT_PASSCODE_VERSION,
         },
       }
+
+      // If no private key was found locally, generate a new one and update the public key
+      // This heals the account from "Fresh Start" or data loss
+      if (!privateKey) {
+        console.log("No local private key found. Generating new key pair...")
+        const { publicKey, privateKey: newPrivateKey } = await generateKeyPair()
+
+        // Store locally
+        await storePrivateKey(userId, newPrivateKey)
+
+        // Encrypt for backup
+        encryptedKeyData = await encryptPrivateKeyWithPasscode(newPrivateKey, passcode.join(""))
+
+        // Update public key in Firebase so others can message me
+        updateData.publicKey = publicKey
+
+        console.log("New key pair generated and synced.")
+      }
+
 
       // Add encrypted key for cross-device sync
       if (encryptedKeyData) {
