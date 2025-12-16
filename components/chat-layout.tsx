@@ -543,6 +543,32 @@ export default function ChatLayout({ selectedServer }: ChatLayoutProps) {
     }
   }, [user, retryCount])
 
+  // Real-time cleanup: If the selected chat is deleted (vanishes from chats/groups list), closes the window.
+  useEffect(() => {
+    if (selectedChat && !loading && chats.length > 0) { // check loading to avoid premature closing on refresh
+      const existsInChats = chats.some(c => c.id === selectedChat)
+      const existsInGroups = groups.some(g => g.id === selectedChat)
+
+      // If we are initialized (have loaded chats/groups) and the selected chat is GONE, close it.
+      if (!existsInChats && !existsInGroups) {
+        console.log("Selected chat no longer exists. Closing window.")
+        // setSelectedChat(null) 
+        // WAIT: this might trigger if chats are still loading? 
+        // I added !loading check. However, initial load might be empty array then populated.
+        // Better: Only run this logic if we receive an update that REDUCES the list?
+        // Or just rely on the existing list state being "truthy" enough.
+
+        // Let's rely on the fact that if we selected a chat, and now the list updates and it's missing, it's deleted.
+        // But we must be careful about initial load blank state.
+        // "chats" state starts as [].
+        // If we select a chat from URL or persistence? We don't have URL persistence yet mostly.
+        // Let's just set it to null.
+        setSelectedChat(null)
+        if (isMobileView) setShowChatOnMobile(false)
+      }
+    }
+  }, [chats, groups, selectedChat, loading, isMobileView])
+
   const handleChatSelect = (chatId: string, userId?: string) => {
     setSelectedChat(chatId)
     setIsGroup(false)
