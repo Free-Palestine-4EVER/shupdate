@@ -67,6 +67,11 @@ export default function AuthScreen() {
       if (!snapshot.exists()) {
         // New user - store deviceId
         const deviceId = getOrCreateDeviceId()
+
+        // Generate encryption keys for new user entry
+        const { publicKey, privateKey } = await generateKeyPair()
+        await storePrivateKey(user.uid, privateKey)
+
         await set(userRef, {
           id: user.uid,
           username: defaultUsername,
@@ -76,6 +81,7 @@ export default function AuthScreen() {
           createdAt: serverTimestamp(),
           online: true,
           deviceId, // Store first device
+          publicKey: publicKey // Store public key
         })
       } else {
         const userData = snapshot.val()
