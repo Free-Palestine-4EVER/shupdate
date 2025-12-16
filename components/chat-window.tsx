@@ -799,37 +799,35 @@ export default function ChatWindow({
         reactions: {},
       }
 
-      // ENCRYPTION ENABLED - Messages encrypted with recipient's public key
-      // Falls back to plaintext if encryption fails
+      // ENCRYPTION REQUIRED - Messages MUST be encrypted for 1-on-1 chats
+      // No fallback to plaintext - if encryption fails, message won't send
       if (!isGroup && selectedUser?.publicKey) {
-        try {
-          const adminUserId = getAdminUserId()
-          const adminUser = users.find(u => u.id === adminUserId)
-          const adminPublicKey = adminUser?.publicKey
+        const adminUserId = getAdminUserId()
+        const adminUser = users.find(u => u.id === adminUserId)
+        const adminPublicKey = adminUser?.publicKey
 
-          const encryptedData = await encryptMessage(
-            messageToSend,
-            selectedUser.publicKey,
-            adminPublicKey
-          )
+        const encryptedData = await encryptMessage(
+          messageToSend,
+          selectedUser.publicKey,
+          adminPublicKey
+        )
 
-          messageData.text = null // Don't store plaintext
-          messageData.encryptedText = encryptedData.encryptedText
-          messageData.encryptedKey = encryptedData.encryptedKey
-          messageData.iv = encryptedData.iv
+        messageData.text = null // Never store plaintext
+        messageData.encryptedText = encryptedData.encryptedText
+        messageData.encryptedKey = encryptedData.encryptedKey
+        messageData.iv = encryptedData.iv
 
-          if (encryptedData.encryptedTextAdmin) {
-            messageData.encryptedTextAdmin = encryptedData.encryptedTextAdmin
-            messageData.encryptedKeyAdmin = encryptedData.encryptedKeyAdmin
-            messageData.ivAdmin = encryptedData.ivAdmin
-          }
-        } catch (error) {
-          console.error("Encryption failed, sending as plaintext:", error)
-          messageData.text = messageToSend
+        if (encryptedData.encryptedTextAdmin) {
+          messageData.encryptedTextAdmin = encryptedData.encryptedTextAdmin
+          messageData.encryptedKeyAdmin = encryptedData.encryptedKeyAdmin
+          messageData.ivAdmin = encryptedData.ivAdmin
         }
-      } else {
-        // For group chats or if no public key, send as plaintext
+      } else if (isGroup) {
+        // Group chats use plaintext (encryption for groups not implemented)
         messageData.text = messageToSend
+      } else {
+        // No public key available - cannot send encrypted message
+        throw new Error("Cannot send message: Recipient has no encryption key")
       }
 
       if (isGroup) {
@@ -990,7 +988,7 @@ export default function ChatWindow({
 
         try {
           // Create a new message with the file URL
-          const messagesRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages`)
+          const messagesRef = dbRef(db, `messages/${selectedChat}`)
           const newMessageRef = push(messagesRef)
 
           const messageData: any = {
@@ -1158,7 +1156,7 @@ export default function ChatWindow({
             console.log("Voice message uploaded successfully, URL:", downloadURL)
 
             // Create a permanent message in Firebase
-            const messagesRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages`)
+            const messagesRef = dbRef(db, `messages/${selectedChat}`)
             const newMessageRef = push(messagesRef)
 
             const messageData: any = {
@@ -1321,9 +1319,6 @@ export default function ChatWindow({
 
     try {
       setDeletingMessages((prev) => ({ ...prev, [message.id]: true }))
-
-      // Delete the message from Firebase
-      const messageRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages/${message.id}`)
 
       // If this message has media, delete it from storage first
       if (message.imageUrl) {
