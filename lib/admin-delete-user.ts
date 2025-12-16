@@ -428,3 +428,61 @@ export async function resetAllPasscodesForFreshStart(): Promise<{
         }
     }
 }
+
+/**
+ * Reset ONLY encryption keys for all users (keeps passcodes intact)
+ * Use this when encryption keys are mismatched but you want to keep user access
+ */
+export async function resetAllEncryptionKeys(): Promise<{
+    success: boolean
+    resetCount: number
+    error?: string
+}> {
+    try {
+        const usersRef = ref(db, "users")
+        const snapshot = await get(usersRef)
+
+        if (!snapshot.exists()) {
+            return { success: true, resetCount: 0 }
+        }
+
+        const users = snapshot.val()
+        const updates: Record<string, null> = {}
+        let resetCount = 0
+
+        for (const userId of Object.keys(users)) {
+            const user = users[userId]
+            let needsUpdate = false
+
+            // Clear encrypted private key
+            if (user.encryptedPrivateKey) {
+                updates[`users/${userId}/encryptedPrivateKey`] = null
+                needsUpdate = true
+            }
+
+            // Clear public key
+            if (user.publicKey) {
+                updates[`users/${userId}/publicKey`] = null
+                needsUpdate = true
+            }
+
+            if (needsUpdate) {
+                resetCount++
+            }
+        }
+
+        // Apply all updates at once
+        if (Object.keys(updates).length > 0) {
+            await update(ref(db), updates)
+        }
+
+        return { success: true, resetCount }
+    } catch (error: any) {
+        console.error("Error resetting encryption keys:", error)
+        return {
+            success: false,
+            resetCount: 0,
+            error: error.message || "Unknown error occurred",
+        }
+    }
+}

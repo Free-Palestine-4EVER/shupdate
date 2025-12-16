@@ -94,14 +94,15 @@ export default function ServerSelectionModal({ isOpen, onServerSelect }: ServerS
                 <Button
                   variant="outline"
                   className={`w-full h-auto p-4 border-0 text-left transition-all duration-300 hover:scale-[1.02] ${selectedServer === server.id
-                      ? "shadow-lg"
-                      : ""
+                    ? "shadow-lg"
+                    : ""
                     }`}
                   style={{
                     background: selectedServer === server.id
                       ? 'linear-gradient(135deg, rgba(30, 30, 38, 0.95) 0%, rgba(20, 20, 28, 0.95) 100%)'
                       : 'linear-gradient(135deg, rgba(30, 30, 38, 0.6) 0%, rgba(20, 20, 28, 0.6) 100%)',
-                    backdropFilter: 'blur(10px)'
+                    backdropFilter: 'blur(10px)',
+                    border: selectedServer === server.id ? '2px solid #ffffff' : '2px solid transparent'
                   }}
                   disabled={isConnecting}
                   onClick={() => handleServerSelect(server.id)}
