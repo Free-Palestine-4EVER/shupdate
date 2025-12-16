@@ -107,19 +107,23 @@ export default function AuthScreen() {
           updatedData.createdAt = serverTimestamp()
         }
 
-        // Check if user has encryption keys, generate if missing
+        // Check if user has encryption keys, generate ONLY if this is a brand new setup with no public key
         if (!userData.publicKey) {
           const { publicKey, privateKey } = await generateKeyPair()
           await storePrivateKey(user.uid, privateKey)
           updatedData.publicKey = publicKey
         } else {
-          // Check if we have the private key locally, if not we need to regenerate
+          // EXISTING USER WITH PUBLIC KEY
+          // DO NOT REGENERATE KEYS HERE.
+          // If the user cleared their browser cache, they need to RESTORE their key using their passcode.
+          // Generating a new key here would invalidate all old messages.
+          console.log("User has existing public key. Checking for local private key...")
           const hasKeys = await hasEncryptionKeys(user.uid)
+
           if (!hasKeys) {
-            // User lost their private key (cleared browser data), need to regenerate
-            const { publicKey, privateKey } = await generateKeyPair()
-            await storePrivateKey(user.uid, privateKey)
-            updatedData.publicKey = publicKey // Update with new public key
+            console.log("Local private key missing. User must restore via passcode or manual reset.")
+            // We do NOT update updatedData.publicKey here. 
+            // The user will be prompted to enter passcode to decrypt their sync'd key in the main app.
           }
         }
 
