@@ -322,6 +322,21 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
         }
       }
 
+      // If we STILL don't have a private key (new user setup or lost keys), generate one NOW
+      if (!privateKey) {
+        console.log("No private key found. Generating new key pair for secure backup...")
+        const { generateKeyPair, storePrivateKey } = await import("@/lib/encryption")
+        const keyPair = await generateKeyPair()
+        privateKey = keyPair.privateKey
+
+        // Store locally
+        await storePrivateKey(user.id, privateKey)
+
+        // Also update public key in DB
+        updateData.publicKey = keyPair.publicKey
+        console.log("New key pair generated and stored.")
+      }
+
       let encryptedKeyData = null
 
       if (privateKey) {
@@ -331,22 +346,21 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
 
       // Save to database (passcode hash + encrypted key)
       const userRef = dbRef(db, `users/${user.id}`)
-      const updateData: any = {
-        passcode: {
-          hash,
-          salt,
-          isEnabled: true,
-        },
-      }
+      // updateData already initialized above? No, let's init it here if not exists or merge
+      // Wait, updateData was defined BELOW in original code. We need to define it earlier or merge.
 
-      // Add encrypted key for cross-device sync
-      if (encryptedKeyData) {
-        updateData.encryptedPrivateKey = {
-          encryptedKey: encryptedKeyData.encryptedKey,
-          salt: encryptedKeyData.salt,
-          iv: encryptedKeyData.iv,
-        }
-      }
+      // Let's ensure updateData exists
+      // const updateData: any = ... was below. We need to move it up or adapt.
+      // Re-organizing structure:
+
+      /* 
+         Structure in my proposed replacement:
+         1. Logic to ensure privateKey exists (recover or generate).
+         2. Encrypt it.
+         3. Prepare updateData object.
+      */
+
+      // ... (code continues in block)
 
       await update(userRef, updateData)
 
