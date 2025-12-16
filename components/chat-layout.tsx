@@ -721,7 +721,7 @@ export default function ChatLayout({ selectedServer }: ChatLayoutProps) {
         display: "flex",
         flexDirection: "column",
         height: "100vh",
-        backgroundColor: "transparent",
+        background: "linear-gradient(180deg, #000000 0%, #434343 100%)",
       }}
     >
       {/* Include the OnlinePresence component but it doesn't render anything visible */}

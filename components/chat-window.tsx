@@ -1744,7 +1744,10 @@ export default function ChatWindow({
       {/* Messages */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-slate-900/30 to-slate-800/30"
+        className="flex-1 p-4 overflow-y-auto"
+        style={{
+          background: "linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(30, 30, 30, 0.3) 100%)"
+        }}
       >
         {messagesError ? (
           <div className="flex flex-col items-center justify-center h-full">
