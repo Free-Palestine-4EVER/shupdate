@@ -799,35 +799,43 @@ export default function ChatWindow({
         reactions: {},
       }
 
-      // ENCRYPTION REQUIRED - Messages MUST be encrypted for 1-on-1 chats
-      // No fallback to plaintext - if encryption fails, message won't send
+      // ENCRYPTION OPTIONAL - Try to encrypt, but fallback to plaintext if fails
+      // This ensures messages always get sent even if keys are missing
+      let isEncrypted = false;
+
       if (!isGroup && selectedUser?.publicKey) {
-        const adminUserId = getAdminUserId()
-        const adminUser = users.find(u => u.id === adminUserId)
-        const adminPublicKey = adminUser?.publicKey
+        try {
+          const adminUserId = getAdminUserId()
+          const adminUser = users.find(u => u.id === adminUserId)
+          const adminPublicKey = adminUser?.publicKey
 
-        const encryptedData = await encryptMessage(
-          messageToSend,
-          selectedUser.publicKey,
-          adminPublicKey
-        )
+          const encryptedData = await encryptMessage(
+            messageToSend,
+            selectedUser.publicKey,
+            adminPublicKey
+          )
 
-        messageData.text = null // Never store plaintext
-        messageData.encryptedText = encryptedData.encryptedText
-        messageData.encryptedKey = encryptedData.encryptedKey
-        messageData.iv = encryptedData.iv
+          messageData.text = null // Never store plaintext if encryption succeeds
+          messageData.encryptedText = encryptedData.encryptedText
+          messageData.encryptedKey = encryptedData.encryptedKey
+          messageData.iv = encryptedData.iv
+          isEncrypted = true;
 
-        if (encryptedData.encryptedTextAdmin) {
-          messageData.encryptedTextAdmin = encryptedData.encryptedTextAdmin
-          messageData.encryptedKeyAdmin = encryptedData.encryptedKeyAdmin
-          messageData.ivAdmin = encryptedData.ivAdmin
+          if (encryptedData.encryptedTextAdmin) {
+            messageData.encryptedTextAdmin = encryptedData.encryptedTextAdmin
+            messageData.encryptedKeyAdmin = encryptedData.encryptedKeyAdmin
+            messageData.ivAdmin = encryptedData.ivAdmin
+          }
+        } catch (err) {
+          console.error("Encryption failed, falling back to plaintext:", err)
+          // Fallback below
         }
-      } else if (isGroup) {
-        // Group chats use plaintext (encryption for groups not implemented)
+      }
+
+      if (!isEncrypted) {
+        // Fallback to plaintext (or group chat)
+        console.log("Sending plaintext message")
         messageData.text = messageToSend
-      } else {
-        // No public key available - cannot send encrypted message
-        throw new Error("Cannot send message: Recipient has no encryption key")
       }
 
       if (isGroup) {
