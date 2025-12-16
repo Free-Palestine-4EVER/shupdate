@@ -109,7 +109,7 @@ export default function MessageModeration() {
       setError(null)
 
       try {
-        const messagesRef = dbRef(db, `chats/${selectedChat.id}/messages`)
+        const messagesRef = dbRef(db, `messages/${selectedChat.id}`)
         const messagesQuery = query(messagesRef, orderByChild("timestamp"), limitToLast(100))
         const snapshot = await get(messagesQuery)
 
@@ -205,7 +205,7 @@ export default function MessageModeration() {
       }
 
       // Delete the message from the database
-      const messageRef = dbRef(db, `chats/${selectedChat.id}/messages/${messageId}`)
+      const messageRef = dbRef(db, `messages/${selectedChat.id}/${messageId}`)
       await remove(messageRef)
 
       // Update local state
@@ -238,6 +238,7 @@ const handleNukeAllMessages = async () => {
     // Delete all major collections related to messaging
     await remove(dbRef(db, "chats"))
     await remove(dbRef(db, "groups"))
+    await remove(dbRef(db, "messages")) // Delete separated messages
     // Also clear userChats to remove references
     await remove(dbRef(db, "userChats"))
 

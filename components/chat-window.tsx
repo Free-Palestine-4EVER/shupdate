@@ -370,7 +370,7 @@ export default function ChatWindow({
     setIsLoadingMessages(true)
 
     try {
-      const messagesRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages`)
+      const messagesRef = dbRef(db, `messages/${selectedChat}`)
 
       const unsubscribe = onValue(
         messagesRef,
@@ -500,9 +500,9 @@ export default function ChatWindow({
 
                 messagesData.forEach((message) => {
                   if (isGroup) {
-                    // For groups, mark as read in readBy object
+                    // For groups, verify readBy
                     if (!message.readBy || !message.readBy[currentUser.id]) {
-                      const messageRef = dbRef(db, `groups/${selectedChat}/messages/${message.id}`)
+                      const messageRef = dbRef(db, `messages/${selectedChat}/${message.id}`)
                       const updateData: any = {
                         [`readBy.${currentUser.id}`]: true,
                       }
@@ -519,7 +519,7 @@ export default function ChatWindow({
                   } else {
                     // For direct chats, use the read flag
                     if (message.receiverId === currentUser.id && !message.read) {
-                      const messageRef = dbRef(db, `chats/${selectedChat}/messages/${message.id}`)
+                      const messageRef = dbRef(db, `messages/${selectedChat}/${message.id}`)
                       const updateData: any = { read: true }
 
                       // Set readAt and expiresAt if auto-delete is enabled
@@ -537,7 +537,7 @@ export default function ChatWindow({
 
                   // Delete expired messages
                   if (message.expiresAt && message.expiresAt < Date.now()) {
-                    const messageRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages/${message.id}`)
+                    const messageRef = dbRef(db, `messages/${selectedChat}/${message.id}`)
                     remove(messageRef).catch((err) => console.error("Error deleting expired message:", err))
                   }
                 })
@@ -762,7 +762,8 @@ export default function ChatWindow({
       await set(typingRef, false)
 
       // Create a new message in the Realtime Database
-      const messagesRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages`)
+      // Optimization: Messages are stored in root 'messages' node
+      const messagesRef = dbRef(db, `messages/${selectedChat}`)
       const newMessageRef = push(messagesRef)
 
       // Prepare message data with encryption for 1-on-1 chats
@@ -1343,6 +1344,7 @@ export default function ChatWindow({
       }
 
       // Delete the message from the database
+      const messageRef = dbRef(db, `messages/${selectedChat}/${message.id}`)
       await remove(messageRef)
 
       // If this was the last message in the chat, update the last message
@@ -1384,8 +1386,9 @@ export default function ChatWindow({
           })
         } else {
           // If there are no more messages, remove the lastMessage field
-          // CHECK: If no messages left at all, user wants to DELETE the chat completely
-          const messagesAfterDeleteRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages`)
+          // CHECK: If no messsages left at all, user wants to DELETE the chat completely
+          // Check the extracted messages node
+          const messagesAfterDeleteRef = dbRef(db, `messages/${selectedChat}`)
           const snapshot = await get(messagesAfterDeleteRef)
 
           if (!snapshot.exists() || snapshot.size === 0) {
