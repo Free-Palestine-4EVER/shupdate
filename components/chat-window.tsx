@@ -2089,13 +2089,20 @@ export default function ChatWindow({
       )}
 
       {/* Message Input */}
-      <div className="p-4 bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-t border-slate-700/50 backdrop-blur-sm">
+      <div className="p-4 border-t border-slate-700/50 backdrop-blur-sm" style={{
+        background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%)'
+      }}>
         {isUploading && !isRecordingVoice && (
           <div className="mb-3">
-            <div className="h-2 bg-gradient-to-r from-slate-700 to-slate-600 rounded-full overflow-hidden">
+            <div className="h-2 rounded-xl overflow-hidden" style={{
+              background: 'linear-gradient(90deg, rgba(40, 40, 40, 0.8) 0%, rgba(30, 30, 30, 0.8) 100%)'
+            }}>
               <div
-                className="h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300 shadow-lg shadow-blue-500/25"
-                style={{ width: `${uploadProgress}%` }}
+                className="h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl transition-all duration-300"
+                style={{
+                  width: `${uploadProgress}%`,
+                  boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)'
+                }}
               ></div>
             </div>
             <p className="text-xs text-slate-400 mt-2 font-medium">Uploading... {Math.round(uploadProgress)}%</p>
@@ -2106,15 +2113,19 @@ export default function ChatWindow({
           {isRecordingVoice ? (
             <VoiceRecorder onVoiceRecorded={handleVoiceRecorded} onCancel={() => setIsRecordingVoice(false)} />
           ) : (
-            <div className="flex items-end space-x-2">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl h-10 w-10 flex-shrink-0 shadow-lg shadow-blue-500/25 transition-all duration-300"
+                className="rounded-xl h-11 w-11 p-0 flex-shrink-0 transition-all duration-300 border-none"
+                style={{
+                  background: 'linear-gradient(180deg, rgb(56, 56, 56) 0%, rgb(36, 36, 36) 66%, rgb(41, 41, 41) 100%)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+                }}
               >
-                <Paperclip className="h-4 w-4" />
+                <Paperclip className="h-4 w-4 text-slate-300" />
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -2124,46 +2135,65 @@ export default function ChatWindow({
                 />
               </Button>
 
-              <Textarea
-                placeholder={`Message${isGroup ? " group" : ""}...`}
-                value={newMessage}
-                onChange={(e) => {
-                  setNewMessage(e.target.value)
-                  handleTyping()
-                }}
-                onKeyDown={handleKeyDown}
-                className="flex-1 message-input rounded-xl bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-slate-600/50 text-white placeholder-slate-400 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 min-h-[44px] max-h-[100px] py-3 px-4 resize-none transition-all duration-300 backdrop-blur-sm text-base"
-                rows={1}
-                disabled={isUploading}
-              />
+              <div className="flex-1 relative">
+                <Textarea
+                  placeholder={`Message${isGroup ? " group" : ""}...`}
+                  value={newMessage}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value)
+                    handleTyping()
+                  }}
+                  onKeyDown={handleKeyDown}
+                  className="w-full rounded-xl border text-white placeholder-slate-400 min-h-[44px] max-h-[100px] py-3 px-4 resize-none transition-all duration-300 text-base"
+                  style={{
+                    background: 'rgba(30, 30, 30, 0.6)',
+                    borderColor: 'rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  rows={1}
+                  disabled={isUploading}
+                />
+              </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`rounded-xl h-10 w-10 flex-shrink-0 shadow-lg transition-all duration-300 ${autoDeleteSetting !== "never"
-                      ? "bg-gradient-to-r from-red-500 to-orange-600 shadow-red-500/25 text-white"
-                      : "bg-gradient-to-r from-slate-700 to-slate-600 text-slate-300 hover:text-white"
+                    className={`rounded-xl h-11 w-11 p-0 flex-shrink-0 transition-all duration-300 border-none ${autoDeleteSetting !== "never"
+                      ? "text-white"
+                      : "text-slate-300"
                       }`}
+                    style={{
+                      background: autoDeleteSetting !== "never"
+                        ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(249, 115, 22, 0.9) 100%)'
+                        : 'linear-gradient(180deg, rgb(56, 56, 56) 0%, rgb(36, 36, 36) 66%, rgb(41, 41, 41) 100%)',
+                      boxShadow: autoDeleteSetting !== "never"
+                        ? '0 4px 12px rgba(239, 68, 68, 0.3)'
+                        : '0 2px 8px rgba(0, 0, 0, 0.3)'
+                    }}
                   >
                     <Timer className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-slate-800 border-slate-700 text-slate-200">
-                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("never")} className="focus:bg-slate-700 focus:text-white cursor-pointer">
+                <DropdownMenuContent align="end" className="w-48 rounded-xl border" style={{
+                  background: 'rgba(30, 30, 30, 0.95)',
+                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                  backdropFilter: 'blur(20px)'
+                }}>
+                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("never")} className="focus:bg-slate-700/50 text-slate-200 cursor-pointer rounded-lg">
                     Off {autoDeleteSetting === "never" && "✓"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("1m")} className="focus:bg-slate-700 focus:text-white cursor-pointer">
+                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("1m")} className="focus:bg-slate-700/50 text-slate-200 cursor-pointer rounded-lg">
                     1 min {autoDeleteSetting === "1m" && "✓"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("5m")} className="focus:bg-slate-700 focus:text-white cursor-pointer">
+                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("5m")} className="focus:bg-slate-700/50 text-slate-200 cursor-pointer rounded-lg">
                     5 min {autoDeleteSetting === "5m" && "✓"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("1h")} className="focus:bg-slate-700 focus:text-white cursor-pointer">
+                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("1h")} className="focus:bg-slate-700/50 text-slate-200 cursor-pointer rounded-lg">
                     1 hour {autoDeleteSetting === "1h" && "✓"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("24h")} className="focus:bg-slate-700 focus:text-white cursor-pointer">
+                  <DropdownMenuItem onClick={() => handleAutoDeleteChange("24h")} className="focus:bg-slate-700/50 text-slate-200 cursor-pointer rounded-lg">
                     24 hours {autoDeleteSetting === "24h" && "✓"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -2172,9 +2202,13 @@ export default function ChatWindow({
               <Button
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim() || isUploading}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl h-10 w-10 p-0 flex-shrink-0 shadow-lg shadow-green-500/25 transition-all duration-300 disabled:opacity-40"
+                className="rounded-xl h-11 w-11 p-0 flex-shrink-0 transition-all duration-300 disabled:opacity-40 border-none"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(16, 185, 129, 0.9) 100%)',
+                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                }}
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-4 w-4 text-white" />
               </Button>
             </div>
           )}

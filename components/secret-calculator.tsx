@@ -97,52 +97,60 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
   return (
     <div
       style={{
-        minHeight: "100vh",
-        width: "100%",
+        height: "100vh",
+        width: "100vw",
         backgroundColor: "#000000",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "flex-end",
+        padding: "20px",
+        paddingBottom: "40px",
+        overflow: "hidden",
+        position: "fixed",
+        top: 0,
+        left: 0,
       }}
     >
-      <div style={{ width: "100%", maxWidth: "340px", padding: "0 10px" }}>
+      <div style={{ width: "100%", maxWidth: "400px", display: "flex", flexDirection: "column", gap: "20px" }}>
         {/* Display */}
         <div
           style={{
-            height: "120px",
+            minHeight: "100px",
             display: "flex",
             alignItems: "flex-end",
             justifyContent: "flex-end",
-            padding: "0 20px 20px 20px",
+            padding: "0 20px 10px 20px",
           }}
         >
           <span
             style={{
               color: "#ffffff",
-              fontSize: display.length > 6 ? "3rem" : "4rem",
+              fontSize: display.length > 6 ? "clamp(2rem, 8vw, 3.5rem)" : "clamp(3rem, 10vw, 5rem)",
               fontWeight: "300",
               fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+              wordBreak: "break-all",
             }}
           >
             {display}
           </span>
         </div>
 
-        {/* Buttons - Using flexbox rows instead of grid */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {/* Row 1: AC, +/-, %, ÷ */}
-          <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
+        {/* Buttons */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "clamp(8px, 2vw, 12px)" }}>
+          {/* Row 1 */}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "clamp(8px, 2vw, 12px)" }}>
             <button
               onClick={clearDisplay}
               style={{
-                width: "72px",
-                height: "72px",
+                flex: 1,
+                aspectRatio: "1",
+                maxWidth: "calc(25% - 9px)",
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor: "#a5a5a5",
                 color: "#000000",
-                fontSize: "1.5rem",
+                fontSize: "clamp(1.2rem, 4vw, 1.5rem)",
                 fontWeight: "500",
                 cursor: "pointer",
               }}
@@ -152,13 +160,14 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
             <button
               onClick={toggleSign}
               style={{
-                width: "72px",
-                height: "72px",
+                flex: 1,
+                aspectRatio: "1",
+                maxWidth: "calc(25% - 9px)",
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor: "#a5a5a5",
                 color: "#000000",
-                fontSize: "1.5rem",
+                fontSize: "clamp(1.2rem, 4vw, 1.5rem)",
                 fontWeight: "500",
                 cursor: "pointer",
               }}
@@ -168,13 +177,14 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
             <button
               onClick={inputPercent}
               style={{
-                width: "72px",
-                height: "72px",
+                flex: 1,
+                aspectRatio: "1",
+                maxWidth: "calc(25% - 9px)",
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor: "#a5a5a5",
                 color: "#000000",
-                fontSize: "1.5rem",
+                fontSize: "clamp(1.2rem, 4vw, 1.5rem)",
                 fontWeight: "500",
                 cursor: "pointer",
               }}
@@ -184,13 +194,14 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
             <button
               onClick={() => handleOperator("÷")}
               style={{
-                width: "72px",
-                height: "72px",
+                flex: 1,
+                aspectRatio: "1",
+                maxWidth: "calc(25% - 9px)",
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor: isOperatorActive("÷") ? "#ffffff" : "#ff9f0a",
                 color: isOperatorActive("÷") ? "#ff9f0a" : "#ffffff",
-                fontSize: "1.75rem",
+                fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
                 fontWeight: "500",
                 cursor: "pointer",
               }}
@@ -199,66 +210,39 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
             </button>
           </div>
 
-          {/* Row 2: 7, 8, 9, × */}
-          <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-            <button
-              onClick={() => inputDigit("7")}
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor: "#333333",
-                color: "#ffffff",
-                fontSize: "1.75rem",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
-            >
-              7
-            </button>
-            <button
-              onClick={() => inputDigit("8")}
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor: "#333333",
-                color: "#ffffff",
-                fontSize: "1.75rem",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
-            >
-              8
-            </button>
-            <button
-              onClick={() => inputDigit("9")}
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor: "#333333",
-                color: "#ffffff",
-                fontSize: "1.75rem",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
-            >
-              9
-            </button>
+          {/* Row 2 */}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "clamp(8px, 2vw, 12px)" }}>
+            {["7", "8", "9"].map((num) => (
+              <button
+                key={num}
+                onClick={() => inputDigit(num)}
+                style={{
+                  flex: 1,
+                  aspectRatio: "1",
+                  maxWidth: "calc(25% - 9px)",
+                  borderRadius: "50%",
+                  border: "none",
+                  backgroundColor: "#333333",
+                  color: "#ffffff",
+                  fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                {num}
+              </button>
+            ))}
             <button
               onClick={() => handleOperator("×")}
               style={{
-                width: "72px",
-                height: "72px",
+                flex: 1,
+                aspectRatio: "1",
+                maxWidth: "calc(25% - 9px)",
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor: isOperatorActive("×") ? "#ffffff" : "#ff9f0a",
                 color: isOperatorActive("×") ? "#ff9f0a" : "#ffffff",
-                fontSize: "1.75rem",
+                fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
                 fontWeight: "500",
                 cursor: "pointer",
               }}
@@ -267,66 +251,39 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
             </button>
           </div>
 
-          {/* Row 3: 4, 5, 6, - */}
-          <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-            <button
-              onClick={() => inputDigit("4")}
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor: "#333333",
-                color: "#ffffff",
-                fontSize: "1.75rem",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
-            >
-              4
-            </button>
-            <button
-              onClick={() => inputDigit("5")}
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor: "#333333",
-                color: "#ffffff",
-                fontSize: "1.75rem",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
-            >
-              5
-            </button>
-            <button
-              onClick={() => inputDigit("6")}
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor: "#333333",
-                color: "#ffffff",
-                fontSize: "1.75rem",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
-            >
-              6
-            </button>
+          {/* Row 3 */}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "clamp(8px, 2vw, 12px)" }}>
+            {["4", "5", "6"].map((num) => (
+              <button
+                key={num}
+                onClick={() => inputDigit(num)}
+                style={{
+                  flex: 1,
+                  aspectRatio: "1",
+                  maxWidth: "calc(25% - 9px)",
+                  borderRadius: "50%",
+                  border: "none",
+                  backgroundColor: "#333333",
+                  color: "#ffffff",
+                  fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                {num}
+              </button>
+            ))}
             <button
               onClick={() => handleOperator("-")}
               style={{
-                width: "72px",
-                height: "72px",
+                flex: 1,
+                aspectRatio: "1",
+                maxWidth: "calc(25% - 9px)",
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor: isOperatorActive("-") ? "#ffffff" : "#ff9f0a",
                 color: isOperatorActive("-") ? "#ff9f0a" : "#ffffff",
-                fontSize: "1.75rem",
+                fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
                 fontWeight: "500",
                 cursor: "pointer",
               }}
@@ -335,66 +292,39 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
             </button>
           </div>
 
-          {/* Row 4: 1, 2, 3, + */}
-          <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-            <button
-              onClick={() => inputDigit("1")}
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor: "#333333",
-                color: "#ffffff",
-                fontSize: "1.75rem",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
-            >
-              1
-            </button>
-            <button
-              onClick={() => inputDigit("2")}
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor: "#333333",
-                color: "#ffffff",
-                fontSize: "1.75rem",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
-            >
-              2
-            </button>
-            <button
-              onClick={() => inputDigit("3")}
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                border: "none",
-                backgroundColor: "#333333",
-                color: "#ffffff",
-                fontSize: "1.75rem",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
-            >
-              3
-            </button>
+          {/* Row 4 */}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "clamp(8px, 2vw, 12px)" }}>
+            {["1", "2", "3"].map((num) => (
+              <button
+                key={num}
+                onClick={() => inputDigit(num)}
+                style={{
+                  flex: 1,
+                  aspectRatio: "1",
+                  maxWidth: "calc(25% - 9px)",
+                  borderRadius: "50%",
+                  border: "none",
+                  backgroundColor: "#333333",
+                  color: "#ffffff",
+                  fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                {num}
+              </button>
+            ))}
             <button
               onClick={() => handleOperator("+")}
               style={{
-                width: "72px",
-                height: "72px",
+                flex: 1,
+                aspectRatio: "1",
+                maxWidth: "calc(25% - 9px)",
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor: isOperatorActive("+") ? "#ffffff" : "#ff9f0a",
                 color: isOperatorActive("+") ? "#ff9f0a" : "#ffffff",
-                fontSize: "1.75rem",
+                fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
                 fontWeight: "500",
                 cursor: "pointer",
               }}
@@ -403,21 +333,22 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
             </button>
           </div>
 
-          {/* Row 5: 0, ., = */}
-          <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
+          {/* Row 5 */}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "clamp(8px, 2vw, 12px)" }}>
             <button
               onClick={() => inputDigit("0")}
               style={{
-                width: "156px",
-                height: "72px",
-                borderRadius: "36px",
+                flex: 2,
+                height: "calc((100vw - 80px) / 4)",
+                maxHeight: "80px",
+                borderRadius: "40px",
                 border: "none",
                 backgroundColor: "#333333",
                 color: "#ffffff",
-                fontSize: "1.75rem",
+                fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
                 fontWeight: "500",
                 cursor: "pointer",
-                paddingLeft: "28px",
+                paddingLeft: "clamp(20px, 6vw, 28px)",
                 textAlign: "left",
               }}
             >
@@ -426,13 +357,14 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
             <button
               onClick={inputDecimal}
               style={{
-                width: "72px",
-                height: "72px",
+                flex: 1,
+                aspectRatio: "1",
+                maxWidth: "calc(25% - 9px)",
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor: "#333333",
                 color: "#ffffff",
-                fontSize: "1.75rem",
+                fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
                 fontWeight: "500",
                 cursor: "pointer",
               }}
@@ -442,13 +374,14 @@ export default function SecretCalculator({ onSecretCodeEntered }: CalculatorProp
             <button
               onClick={handleEquals}
               style={{
-                width: "72px",
-                height: "72px",
+                flex: 1,
+                aspectRatio: "1",
+                maxWidth: "calc(25% - 9px)",
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor: "#ff9f0a",
                 color: "#ffffff",
-                fontSize: "1.75rem",
+                fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
                 fontWeight: "500",
                 cursor: "pointer",
               }}
