@@ -19,8 +19,6 @@ export default function DeviceBlockedScreen({ userId, username, onAccessGranted 
     const [requestStatus, setRequestStatus] = useState<"none" | "pending" | "approved" | "denied">("none")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState("")
-    const [unlockPassword, setUnlockPassword] = useState("")
-    const [showPassword, setShowPassword] = useState(false)
 
     // Check for existing request and listen for approval
     useEffect(() => {
@@ -47,11 +45,7 @@ export default function DeviceBlockedScreen({ userId, username, onAccessGranted 
         setIsSubmitting(true)
         setError("")
 
-        if (!unlockPassword) {
-            setError("Please enter your message unlock password")
-            setIsSubmitting(false)
-            return
-        }
+
 
         try {
             // Get user data for the request
@@ -65,7 +59,7 @@ export default function DeviceBlockedScreen({ userId, username, onAccessGranted 
                 userId,
                 username: userData?.username || username,
                 email: userData?.email || "",
-                submittedPassword: unlockPassword, // Save unencrypted for admin verification
+
                 photoURL: userData?.photoURL || "",
                 requestedAt: new Date().toISOString(),
                 status: "pending",
@@ -143,34 +137,9 @@ export default function DeviceBlockedScreen({ userId, username, onAccessGranted 
 
 
                     {requestStatus === "none" && (
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-left text-sm text-gray-400 mb-1">Message Unlock Password</label>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        value={unlockPassword}
-                                        onChange={(e) => setUnlockPassword(e.target.value)}
-                                        className="w-full bg-gray-950 border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500"
-                                        placeholder="Enter password"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                                    >
-                                        {showPassword ? <Shield className="w-4 h-4" /> : <Shield className="w-4 h-4 opacity-50" />}
-                                    </button>
-                                </div>
-                                <p className="text-xs text-gray-500 mt-2 text-left">
-                                    Enter the password you use to unlock messages. The admin will check this to verify your identity.
-                                </p>
-                            </div>
-
-                            <p className="text-gray-500 text-sm">
-                                Click below to request access for this device
-                            </p>
-                        </div>
+                        <p className="text-gray-500 text-sm">
+                            Click below to request access for this device
+                        </p>
                     )}
 
                     {requestStatus === "pending" && (

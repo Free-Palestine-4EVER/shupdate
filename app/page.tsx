@@ -11,6 +11,9 @@ import { ref, onValue, get } from "firebase/database"
 import { updateLastAccessTime, setSessionVerified, CURRENT_PASSCODE_VERSION } from "@/lib/passcode-utils"
 import AddToHomescreen from "@/components/add-to-homescreen"
 import DeviceBlockedScreen from "@/components/device-blocked-screen"
+import { update } from "firebase/database"
+
+const CURRENT_DEVICE_VERSION = 1
 
 // Dynamically import components that use browser APIs
 const MatrixBackground = dynamic(() => import("@/components/matrix-background"), {
@@ -163,9 +166,24 @@ function AppContent() {
           if (snapshot.exists()) {
             const userData = snapshot.val()
 
-            // DEVICE CHECK
+            // DEVICE CHECK & RESET
             const localDeviceId = localStorage.getItem("deviceId")
-            if (userData.deviceId && localDeviceId && userData.deviceId !== localDeviceId) {
+
+            // Check if device logic needs reset/migration
+            // If user's deviceVersion is missing or old, claim THIS device as the new primary
+            if (userData.deviceVersion !== CURRENT_DEVICE_VERSION && localDeviceId) {
+              console.log("Device version outdated. Claiming this device as primary.")
+              const userUpdateRef = ref(db, `users/${user.uid}`)
+              update(userUpdateRef, {
+                deviceId: localDeviceId,
+                deviceVersion: CURRENT_DEVICE_VERSION
+              }).then(() => {
+                console.log("Device migrated successfully")
+                setIsDeviceBlocked(false)
+                setBlockedData(null)
+              }).catch(err => console.error("Device migration failed:", err))
+            }
+            else if (userData.deviceId && localDeviceId && userData.deviceId !== localDeviceId) {
               console.log("Device mismatch in main app. Blocking access.")
               setIsDeviceBlocked(true)
               setBlockedData({
