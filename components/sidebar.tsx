@@ -644,12 +644,14 @@ export default function Sidebar({
                       style={{
                         padding: "16px",
                         cursor: "pointer",
-                        transition: "all 0.3s",
+                        transition: "all 0.2s",
                         background:
                           selectedChat === chat.id
-                            ? "linear-gradient(to right, rgba(59, 130, 246, 0.2), rgba(168, 85, 247, 0.2))"
+                            ? "rgba(255, 255, 255, 0.15)"
                             : "transparent",
-                        borderRight: selectedChat === chat.id ? "2px solid rgb(59, 130, 246)" : "none",
+                        border: selectedChat === chat.id ? "1px solid rgba(255, 255, 255, 0.5)" : "1px solid transparent",
+                        borderRadius: "12px",
+                        margin: "4px 8px",
                         backdropFilter: "blur(8px)",
                       }}
                       onMouseEnter={(e) => {
@@ -808,12 +810,14 @@ export default function Sidebar({
                     style={{
                       padding: "16px",
                       cursor: "pointer",
-                      transition: "all 0.3s",
+                      transition: "all 0.2s",
                       background:
                         selectedChat === group.id
-                          ? "linear-gradient(to right, rgba(59, 130, 246, 0.2), rgba(168, 85, 247, 0.2))"
+                          ? "rgba(255, 255, 255, 0.15)"
                           : "transparent",
-                      borderRight: selectedChat === group.id ? "2px solid rgb(59, 130, 246)" : "none",
+                      border: selectedChat === group.id ? "1px solid rgba(255, 255, 255, 0.5)" : "1px solid transparent",
+                      borderRadius: "12px",
+                      margin: "4px 8px",
                       backdropFilter: "blur(8px)",
                     }}
                     onMouseEnter={(e) => {
