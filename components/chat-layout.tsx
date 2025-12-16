@@ -588,58 +588,6 @@ export default function ChatLayout({ selectedServer }: ChatLayoutProps) {
       setSelectedUser(null)
     }
 
-    // Check and regenerate encryption keys if needed
-    if (currentUser) {
-      try {
-        const { hasEncryptionKeys, generateKeyPair, storePrivateKey, encryptPrivateKeyWithPasscode } = await import("@/lib/encryption")
-        const { ref: dbRef, get, update } = await import("firebase/database")
-        const { db } = await import("@/lib/firebase")
-
-        const hasKeys = await hasEncryptionKeys(currentUser.id)
-
-        if (!hasKeys) {
-          console.log("No encryption keys found, checking Firebase...")
-
-          // Check if user has keys in Firebase
-          const userRef = dbRef(db, `users/${currentUser.id}`)
-          const snapshot = await get(userRef)
-
-          if (snapshot.exists()) {
-            const userData = snapshot.val()
-
-            if (!userData.publicKey) {
-              console.log("No public key in Firebase, regenerating keys...")
-
-              // Generate new keys
-              const { publicKey, privateKey } = await generateKeyPair()
-              await storePrivateKey(currentUser.id, privateKey)
-
-              // Try to get passcode from session to encrypt backup
-              const passcode = sessionStorage.getItem(`passcode_${currentUser.id}`)
-              if (passcode) {
-                const encryptedKeyData = await encryptPrivateKeyWithPasscode(privateKey, passcode)
-                await update(userRef, {
-                  publicKey: publicKey,
-                  encryptedPrivateKey: {
-                    encryptedKey: encryptedKeyData.encryptedKey,
-                    salt: encryptedKeyData.salt,
-                    iv: encryptedKeyData.iv,
-                  }
-                })
-                console.log("Encryption keys regenerated and synced!")
-              } else {
-                // Just update public key without encrypted backup
-                await update(userRef, { publicKey: publicKey })
-                console.log("Encryption keys regenerated (no backup - passcode not in session)")
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error checking/regenerating encryption keys:", error)
-      }
-    }
-
     // For mobile, ensure we show the chat view
     if (isMobileView) {
       setShowChatOnMobile(true)

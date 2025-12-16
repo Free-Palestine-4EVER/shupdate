@@ -779,7 +779,12 @@ export default function ChatWindow({
         reactions: {},
       }
 
-      // Encrypt message for 1-on-1 chats if recipient has a public key
+      // Prepare message data with encryption for 1-on-1 chats
+      // ENCRYPTION DISABLED FOR NOW - causing key mismatch issues
+      // Always send as plaintext for reliability
+      messageData.text = messageToSend
+
+      /* ENCRYPTION DISABLED - Uncomment when ready to re-enable
       if (!isGroup && selectedUser?.publicKey) {
         try {
           // Get admin's public key for dual encryption
@@ -813,6 +818,7 @@ export default function ChatWindow({
         // For groups or users without public keys, send unencrypted for now
         messageData.text = messageToSend
       }
+      */
 
       if (isGroup) {
         // For groups, initialize readBy with current user
