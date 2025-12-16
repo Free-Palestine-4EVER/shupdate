@@ -232,6 +232,12 @@ export async function decryptMessage(
         return decoder.decode(decryptedBuffer)
     } catch (error) {
         console.error("Decryption failed:", error)
+
+        // Check if it's an OperationError (wrong key)
+        if (error instanceof DOMException && error.name === "OperationError") {
+            return "[🔒 Message encrypted with old key - cannot decrypt after reset]"
+        }
+
         return "[Unable to decrypt message]"
     }
 }

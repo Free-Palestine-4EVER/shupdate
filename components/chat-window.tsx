@@ -754,6 +754,10 @@ export default function ChatWindow({
   const handleSendMessage = async () => {
     if (!currentUser || !selectedChat || !newMessage.trim()) return
 
+    // Store message and clear input IMMEDIATELY to prevent delay
+    const messageToSend = newMessage.trim()
+    setNewMessage("")
+
     try {
       // Clear typing status
       setIsTyping(false)
@@ -785,7 +789,7 @@ export default function ChatWindow({
 
           // Encrypt message for recipient and optionally for admin
           const encryptedData = await encryptMessage(
-            newMessage.trim(),
+            messageToSend,
             selectedUser.publicKey,
             adminPublicKey
           )
@@ -803,11 +807,11 @@ export default function ChatWindow({
           }
         } catch (encryptError) {
           console.error("Encryption failed, sending unencrypted:", encryptError)
-          messageData.text = newMessage.trim()
+          messageData.text = messageToSend
         }
       } else {
         // For groups or users without public keys, send unencrypted for now
-        messageData.text = newMessage.trim()
+        messageData.text = messageToSend
       }
 
       if (isGroup) {
@@ -825,7 +829,7 @@ export default function ChatWindow({
       const chatRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}`)
       const lastMessageData: any = {
         id: newMessageRef.key,
-        text: newMessage,
+        text: messageToSend,
         senderId: currentUser.id,
         timestamp: new Date().toISOString(),
         read: false,
@@ -856,7 +860,7 @@ export default function ChatWindow({
         participantIds.forEach(async (participantId) => {
           if (participantId !== currentUser.id && !isUserOnline(participantId)) {
             try {
-              const preview = formatMessagePreview(newMessage)
+              const preview = formatMessagePreview(messageToSend)
               await sendMessageNotification(
                 participantId,
                 `${currentUser.username} in ${groupData.name}`,
@@ -872,7 +876,7 @@ export default function ChatWindow({
       } else if (selectedUser && !isUserOnline(selectedUser.id)) {
         // For direct chats, notify the other user if they're offline
         try {
-          const preview = formatMessagePreview(newMessage)
+          const preview = formatMessagePreview(messageToSend)
           await sendMessageNotification(
             selectedUser.id,
             currentUser.username,
@@ -884,11 +888,11 @@ export default function ChatWindow({
           console.error("Error sending notification:", error)
         }
       }
-
-      setNewMessage("")
     } catch (error: any) {
       console.error("Error sending message:", error)
       alert(`Failed to send message: ${error.message}`)
+      // Restore message on error
+      setNewMessage(messageToSend)
     }
   }
 
@@ -1989,7 +1993,7 @@ export default function ChatWindow({
                           className={`px-6 py-4 ${isCurrentUser
                             ? "bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg shadow-blue-500/25"
                             : "bg-gradient-to-r from-slate-700 to-slate-600 shadow-lg shadow-slate-700/25"
-                            } rounded-2xl w-full backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]`}
+                            } rounded-xl w-full backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]`}
                         >
                           <p className="text-white break-words whitespace-pre-wrap text-base leading-relaxed font-medium">
                             {message.text}
