@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Shield, Check, Loader2, Sparkles, Lock, Globe } from "lucide-react"
+import ElectricBorder from "@/components/electric-border"
 
 interface ServerSelectionModalProps {
   isOpen: boolean
@@ -11,10 +12,10 @@ interface ServerSelectionModalProps {
 }
 
 const servers = [
-  { id: "russia", name: "Russia Server", flag: "🇷🇺", label: "Fastest", ping: "45ms" },
-  { id: "hongkong", name: "Hong Kong Server", flag: "🇭🇰", ping: "120ms" },
-  { id: "malta", name: "Malta Server", flag: "🇲🇹", ping: "180ms" },
-  { id: "china", name: "China Server", flag: "🇨🇳", ping: "210ms" },
+  { id: "russia", name: "Russia Server", flag: "🇷🇺", label: "Fastest", ping: "45ms", color: "#7df9ff" },
+  { id: "hongkong", name: "Hong Kong Server", flag: "🇭🇰", ping: "120ms", color: "#ff7d7d" },
+  { id: "malta", name: "Malta Server", flag: "🇲🇹", ping: "180ms", color: "#ffd77d" },
+  { id: "china", name: "China Server", flag: "🇨🇳", ping: "210ms", color: "#ff7dff" },
 ]
 
 export default function ServerSelectionModal({ isOpen, onServerSelect }: ServerSelectionModalProps) {
@@ -33,8 +34,10 @@ export default function ServerSelectionModal({ isOpen, onServerSelect }: ServerS
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md border-0 bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl shadow-2xl">
+    <Dialog open={isOpen} onOpenChange={() => { }}>
+      <DialogContent className="sm:max-w-md border-0 backdrop-blur-xl shadow-2xl" style={{
+        background: 'linear-gradient(135deg, rgba(20, 20, 28, 0.95) 0%, rgba(15, 15, 20, 0.98) 100%)'
+      }}>
         {/* Floating Security Elements */}
         <div className="absolute -top-2 -left-2 w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full opacity-20 animate-pulse"></div>
         <div className="absolute -top-1 -right-3 w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-30 animate-ping"></div>
@@ -80,63 +83,76 @@ export default function ServerSelectionModal({ isOpen, onServerSelect }: ServerS
           {/* Server List */}
           <div className="space-y-3">
             {servers.map((server) => (
-              <Button
+              <ElectricBorder
                 key={server.id}
-                variant="outline"
-                className={`w-full h-auto p-4 bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-slate-600/50 hover:from-slate-700/60 hover:to-slate-600/60 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10 ${
-                  selectedServer === server.id
-                    ? "border-gradient-to-r from-blue-500 to-purple-500 bg-gradient-to-r from-blue-500/20 to-purple-500/20 shadow-lg shadow-blue-500/20"
-                    : ""
-                } backdrop-blur-sm`}
-                disabled={isConnecting}
-                onClick={() => handleServerSelect(server.id)}
+                color={selectedServer === server.id ? server.color : "transparent"}
+                speed={selectedServer === server.id ? 1.5 : 0}
+                chaos={0.5}
+                thickness={2}
+                style={{ borderRadius: 12 }}
               >
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center space-x-4">
-                    {/* Flag with glow effect */}
-                    <div className="text-2xl relative">
-                      {server.flag}
-                      {selectedServer === server.id && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-lg opacity-30 animate-pulse"></div>
-                      )}
-                    </div>
-
-                    <div className="text-left">
-                      <div className="flex items-center space-x-2">
-                        <p className="font-semibold text-white text-base">{server.name}</p>
-                        {server.label && (
-                          <span className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-1 rounded-full font-medium shadow-lg shadow-green-500/25">
-                            {server.label}
-                          </span>
+                <Button
+                  variant="outline"
+                  className={`w-full h-auto p-4 border-0 text-left transition-all duration-300 hover:scale-[1.02] ${selectedServer === server.id
+                      ? "shadow-lg"
+                      : ""
+                    }`}
+                  style={{
+                    background: selectedServer === server.id
+                      ? 'linear-gradient(135deg, rgba(30, 30, 38, 0.95) 0%, rgba(20, 20, 28, 0.95) 100%)'
+                      : 'linear-gradient(135deg, rgba(30, 30, 38, 0.6) 0%, rgba(20, 20, 28, 0.6) 100%)',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  disabled={isConnecting}
+                  onClick={() => handleServerSelect(server.id)}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center space-x-4">
+                      {/* Flag with glow effect */}
+                      <div className="text-2xl relative">
+                        {server.flag}
+                        {selectedServer === server.id && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-lg opacity-30 animate-pulse"></div>
                         )}
                       </div>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <div className="flex items-center space-x-1">
-                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                          <span className="text-xs text-green-400 font-medium">Ping: {server.ping}</span>
+
+                      <div className="text-left">
+                        <div className="flex items-center space-x-2">
+                          <p className="font-semibold text-white text-base">{server.name}</p>
+                          {server.label && (
+                            <span className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-1 rounded-full font-medium shadow-lg shadow-green-500/25">
+                              {server.label}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <div className="flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-green-400 font-medium">Ping: {server.ping}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Status Icon */}
-                  <div className="flex-shrink-0">
-                    {selectedServer === server.id && isConnecting ? (
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/25">
-                        <Loader2 className="h-4 w-4 text-white animate-spin" />
-                      </div>
-                    ) : selectedServer === server.id ? (
-                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/25 animate-pulse">
-                        <Check className="h-4 w-4 text-white" />
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 bg-gradient-to-r from-slate-600 to-slate-500 rounded-full flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity">
-                        <div className="w-3 h-3 border-2 border-white rounded-full"></div>
-                      </div>
-                    )}
+                    {/* Status Icon */}
+                    <div className="flex-shrink-0">
+                      {selectedServer === server.id && isConnecting ? (
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/25">
+                          <Loader2 className="h-4 w-4 text-white animate-spin" />
+                        </div>
+                      ) : selectedServer === server.id ? (
+                        <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/25 animate-pulse">
+                          <Check className="h-4 w-4 text-white" />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 bg-gradient-to-r from-slate-600 to-slate-500 rounded-full flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity">
+                          <div className="w-3 h-3 border-2 border-white rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Button>
+                </Button>
+              </ElectricBorder>
             ))}
           </div>
 
