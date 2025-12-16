@@ -360,7 +360,23 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
     setNotificationSuccess(false)
 
     try {
-      // First, try the native browser notification API
+      // Prioritize OneSignal if available (Custom UI -> System UI)
+      if (window.OneSignal) {
+        try {
+          console.log("Triggering OneSignal prompt sequence")
+          await window.OneSignal.showSlidedownPrompt()
+
+          // Also identify user immediately
+          if (user && user.id) {
+            await window.OneSignal.login(user.id)
+            console.log("OneSignal login called for:", user.id)
+          }
+        } catch (e) {
+          console.error("OneSignal prompt error:", e)
+        }
+      }
+
+      // Then request native permission (triggers system modal if OneSignal didn't, or confirms status)
       const permission = await Notification.requestPermission()
 
       if (permission === "granted") {
@@ -378,17 +394,12 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
           }).catch((err) => console.error("Error saving notification status:", err))
         }
 
-        // Also register with OneSignal if available
+        // Final verification with OneSignal
         if (window.OneSignal) {
-          try {
-            console.log("Native permission granted, syncing with OneSignal")
-            await window.OneSignal.showSlidedownPrompt()
-
-            if (user && user.id) {
-              window.OneSignal.login(user.id)
-            }
-          } catch (e) {
-            console.error("OneSignal sync error:", e)
+          // Ensure opt-in if permission granted
+          const isOptedOut = await window.OneSignal.User.PushSubscription.optedOut
+          if (isOptedOut) {
+            await window.OneSignal.User.PushSubscription.optIn()
           }
         }
 
@@ -403,6 +414,7 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
           variant: "destructive",
         })
       } else {
+        // Dismissed or default
         toast({
           title: "Permission Dismissed",
           description: "Click again to enable notifications.",
@@ -410,47 +422,11 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
       }
     } catch (error) {
       console.error("Error requesting notification permission:", error)
-
-      // Fallback to OneSignal if native API fails or to ensure registration
-      if (window.OneSignal) {
-        console.log("Triggering OneSignal prompt from settings")
-        try {
-          // Check if already subscribed
-          const isPushNotificationsEnabled = await window.OneSignal.getNotificationPermission() === "granted"
-          console.log("OneSignal permission status:", window.OneSignal.getNotificationPermission())
-
-          if (!isPushNotificationsEnabled) {
-            await window.OneSignal.showSlidedownPrompt()
-          } else {
-            // Already granted, ensure user is registered
-            if (user && user.id) {
-              console.log("Already granted, identifying user with OneSignal")
-              window.OneSignal.login(user.id)
-
-              // Verify subscription
-              const id = await window.OneSignal.User.PushSubscription.id
-              if (!id) {
-                console.log("User has permission but no subscription ID, opting in")
-                window.OneSignal.User.PushSubscription.optIn()
-              }
-            }
-
-            toast({
-              title: "Notifications Active",
-              description: "You are already subscribed to notifications.",
-            })
-          }
-        } catch (err) {
-          console.error("Error with OneSignal prompt:", err)
-        }
-      } else {
-        console.warn("OneSignal not loaded")
-        toast({
-          title: "Error",
-          description: "Notification service not verified. Please reload the page.",
-          variant: "destructive",
-        })
-      }
+      toast({
+        title: "Error",
+        description: "Could not enable notifications. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
