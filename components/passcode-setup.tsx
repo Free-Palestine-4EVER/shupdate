@@ -367,9 +367,11 @@ export default function PasscodeSetup({ userId, onComplete }: PasscodeSetupProps
                 </span>
               </div>
             </div>
-          </div>
+          </>
+        )}
+      </div>
 
-        <style jsx>{`
+      <style jsx>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
           10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
@@ -379,6 +381,6 @@ export default function PasscodeSetup({ userId, onComplete }: PasscodeSetupProps
           animation: shake 0.5s ease-in-out;
         }
       `}</style>
-      </div>
-      )
+    </div>
+  )
 }
