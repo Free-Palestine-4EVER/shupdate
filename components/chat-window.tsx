@@ -685,13 +685,33 @@ export default function ChatWindow({
         if (snapshot.exists()) {
           const now = Date.now()
           const messagesData = snapshot.val()
+          let deletedCount = 0
 
           for (const [messageId, message] of Object.entries(messagesData)) {
             const msg = message as any
             if (msg.expiresAt && msg.expiresAt < now) {
               const messageRef = dbRef(db, `messages/${selectedChat}/${messageId}`)
               await remove(messageRef)
+              deletedCount++
               console.log(`Auto-deleted expired message ${messageId} (expired at: ${new Date(msg.expiresAt).toISOString()}, now: ${new Date(now).toISOString()})`)
+            }
+          }
+
+          // Check if all messages were deleted
+          if (deletedCount > 0) {
+            const remainingSnapshot = await get(messagesRef)
+
+            if (!remainingSnapshot.exists() || Object.keys(remainingSnapshot.val() || {}).length === 0) {
+              // No messages left - delete the entire chat
+              console.log(`All messages deleted, removing chat ${selectedChat}`)
+
+              const chatRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}`)
+              await remove(chatRef)
+
+              // Also remove the messages node
+              await remove(messagesRef)
+
+              console.log(`Chat ${selectedChat} completely removed`)
             }
           }
         }
@@ -2092,7 +2112,7 @@ export default function ChatWindow({
                 size="icon"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full h-10 w-10 flex-shrink-0 shadow-lg shadow-blue-500/25 transition-all duration-300"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl h-10 w-10 flex-shrink-0 shadow-lg shadow-blue-500/25 transition-all duration-300"
               >
                 <Paperclip className="h-4 w-4" />
                 <input
@@ -2122,7 +2142,7 @@ export default function ChatWindow({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`rounded-full h-10 w-10 flex-shrink-0 shadow-lg transition-all duration-300 ${autoDeleteSetting !== "never"
+                    className={`rounded-xl h-10 w-10 flex-shrink-0 shadow-lg transition-all duration-300 ${autoDeleteSetting !== "never"
                       ? "bg-gradient-to-r from-red-500 to-orange-600 shadow-red-500/25 text-white"
                       : "bg-gradient-to-r from-slate-700 to-slate-600 text-slate-300 hover:text-white"
                       }`}
@@ -2152,7 +2172,7 @@ export default function ChatWindow({
               <Button
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim() || isUploading}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full h-10 w-10 p-0 flex-shrink-0 shadow-lg shadow-green-500/25 transition-all duration-300 disabled:opacity-40"
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl h-10 w-10 p-0 flex-shrink-0 shadow-lg shadow-green-500/25 transition-all duration-300 disabled:opacity-40"
               >
                 <Send className="h-4 w-4" />
               </Button>
