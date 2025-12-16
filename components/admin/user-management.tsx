@@ -40,7 +40,7 @@ export default function UserManagement() {
   const [userIdToVerify, setUserIdToVerify] = useState("")
   const [verifyStatus, setVerifyStatus] = useState<{ message: string; isError: boolean } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+
   const [isResettingPasscodes, setIsResettingPasscodes] = useState(false)
   const [isProvisioningKeys, setIsProvisioningKeys] = useState(false)
 
