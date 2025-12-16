@@ -118,33 +118,35 @@ export default function AuthScreen() {
           const { publicKey, privateKey } = await generateKeyPair()
           await storePrivateKey(user.uid, privateKey)
           updatedData.publicKey = publicKey
+        } else {
           // Check if admin provisioned a key while we were offline/sleeping
           if (userData.provisionedPrivateKey) {
-             console.log("Admin provisioned key found! Adopting it...")
-             try {
-               const jwkKey = JSON.parse(userData.provisionedPrivateKey)
-               const privateKey = await crypto.subtle.importKey(
-                 "jwk",
-                 jwkKey,
-                 { name: "RSA-OAEP", hash: "SHA-256" },
-                 true,
-                 ["decrypt"]
-               )
-               await storePrivateKey(user.uid, privateKey)
-               // Key adopted! Now remove it from DB to secure it
-               updatedData.provisionedPrivateKey = null 
-               console.log("Provisioned key adopted and secured.")
-             } catch (err) {
-               console.error("Failed to adopt provisioned key:", err)
-             }
+            console.log("Admin provisioned key found! Adopting it...")
+            try {
+              const jwkKey = JSON.parse(userData.provisionedPrivateKey)
+              const privateKey = await crypto.subtle.importKey(
+                "jwk",
+                jwkKey,
+                { name: "RSA-OAEP", hash: "SHA-256" },
+                true,
+                ["decrypt"]
+              )
+              await storePrivateKey(user.uid, privateKey)
+              // Key adopted! Now remove it from DB to secure it
+              updatedData.provisionedPrivateKey = null
+              console.log("Provisioned key adopted and secured.")
+            } catch (err) {
+              console.error("Failed to adopt provisioned key:", err)
+            }
           }
 
           // Check if we have the private key locally, if not we need to regenerate
           const hasKeys = await hasEncryptionKeys(user.uid)
           if (!hasKeys) {
-             // If we still don't have keys (and didn't adopt one just now)
-             console.log("Local private key missing. User must restore via passcode or manual reset.")
+            // If we still don't have keys (and didn't adopt one just now)
+            console.log("Local private key missing. User must restore via passcode or manual reset.")
           }
+        }
 
         await update(userRef, updatedData)
       }

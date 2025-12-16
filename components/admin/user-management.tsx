@@ -468,8 +468,7 @@ export default function UserManagement() {
             </AlertDialogContent>
           </AlertDialog>
         </div>
-            </AlertDialogContent>
-          </AlertDialog>
+
           
           <AlertDialog>
             <AlertDialogTrigger asChild>
