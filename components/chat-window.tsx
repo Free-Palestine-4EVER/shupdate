@@ -435,11 +435,11 @@ export default function ChatWindow({
                       privateKey
                     )
                   } else {
-                    decryptedText = "[Encryption key not found]"
+                    decryptedText = "[Encryption key not found - User may need to login again]"
                   }
                 } catch (decryptError) {
                   console.error("Decryption failed:", decryptError)
-                  decryptedText = "[Unable to decrypt]"
+                  decryptedText = "[🔒 Message encrypted with old key - cannot decrypt after reset]"
                 }
               }
 
