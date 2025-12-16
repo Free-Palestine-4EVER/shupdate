@@ -721,6 +721,7 @@ export default function ChatLayout({ selectedServer }: ChatLayoutProps) {
               setSearchQuery={setSearchQuery}
               filteredUsers={filteredUsers}
               selectedServer={selectedServer}
+              isMobileView={isMobileView}
             />
           </div>
 

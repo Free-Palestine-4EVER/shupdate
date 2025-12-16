@@ -480,6 +480,7 @@ export default function ChatWindow({
               const chatRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}`)
               get(chatRef).then((chatSnapshot) => {
                 const chatData = chatSnapshot.val()
+                console.log("Chat data fetched for auto-delete:", chatData?.autoDeleteAfter) // Debug log
                 const autoDeleteAfter = chatData?.autoDeleteAfter || "never"
 
                 // Calculate expiration time based on setting
@@ -645,6 +646,7 @@ export default function ChatWindow({
   const handleAutoDeleteChange = async (setting: string) => {
     if (!selectedChat) return
 
+    console.log("Setting auto-delete to:", setting) // Debug log
     try {
       const chatRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}`)
       await update(chatRef, {

@@ -82,19 +82,12 @@ export default function AuthScreen() {
         const currentDeviceId = getOrCreateDeviceId()
 
         // DEVICE CHECK: Enforce 1-account-1-device policy
-        // - If user has NO deviceId stored → legacy user, store current device (allow login)
-        // - If user has deviceId AND it matches → same device (allow login)
-        // - If user has deviceId AND it DOESN'T match → different device (block login)
-
+        // Log logic but DO NOT logout here. The main page will handle the blocking UI.
+        // This ensures the user remains authenticated to request access.
         if (userData.deviceId && userData.deviceId !== currentDeviceId) {
-          // Device mismatch - block access and show device blocked screen
-          setIsDeviceBlocked(true)
-          setBlockedUserId(user.uid)
-          setBlockedUsername(userData.username || defaultUsername)
-          await signOut(auth)
-          setIsLoading(false)
-          return
+          console.log("Device mismatch detected during login. Access will be restricted by main layout.")
         }
+
 
         const updatedData: any = {
           lastSeen: serverTimestamp(),

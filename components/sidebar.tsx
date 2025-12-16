@@ -26,6 +26,7 @@ interface SidebarProps {
   setSearchQuery: (query: string) => void
   filteredUsers: User[]
   selectedServer?: string | null
+  isMobileView?: boolean // Added for responsive design
 }
 
 // Map server IDs to readable names
@@ -52,6 +53,7 @@ export default function Sidebar({
   setSearchQuery,
   filteredUsers,
   selectedServer,
+  isMobileView = false,
 }: SidebarProps) {
   const [isSearching, setIsSearching] = useState(false)
   const [onlineUsers, setOnlineUsers] = useState<Record<string, boolean>>({})
@@ -275,7 +277,7 @@ export default function Sidebar({
     <div
       style={{
         width: "100%",
-        maxWidth: "320px",
+        maxWidth: isMobileView ? "100%" : "320px",
         display: "flex",
         flexDirection: "column",
         height: "100%",

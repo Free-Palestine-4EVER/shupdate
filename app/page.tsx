@@ -10,6 +10,7 @@ import { db } from "@/lib/firebase"
 import { ref, onValue, get } from "firebase/database"
 import { updateLastAccessTime, setSessionVerified } from "@/lib/passcode-utils"
 import AddToHomescreen from "@/components/add-to-homescreen"
+import DeviceBlockedScreen from "@/components/device-blocked-screen"
 
 // Dynamically import components that use browser APIs
 const MatrixBackground = dynamic(() => import("@/components/matrix-background"), {
@@ -103,6 +104,8 @@ function AppContent() {
   const [secretCodeEntered, setSecretCodeEntered] = useState(false)
   const [chatLoaded, setChatLoaded] = useState(false)
   const [showOneSignalPrompt, setShowOneSignalPrompt] = useState(false)
+  const [isDeviceBlocked, setIsDeviceBlocked] = useState(false)
+  const [blockedData, setBlockedData] = useState<{ userId: string; username: string } | null>(null)
 
   // Reset session verification on page load/refresh
   useEffect(() => {
@@ -159,6 +162,21 @@ function AppContent() {
         .then((snapshot) => {
           if (snapshot.exists()) {
             const userData = snapshot.val()
+
+            // DEVICE CHECK
+            const localDeviceId = localStorage.getItem("deviceId")
+            if (userData.deviceId && localDeviceId && userData.deviceId !== localDeviceId) {
+              console.log("Device mismatch in main app. Blocking access.")
+              setIsDeviceBlocked(true)
+              setBlockedData({
+                userId: user.uid,
+                username: userData.username || user.displayName || "User"
+              })
+            } else {
+              setIsDeviceBlocked(false)
+              setBlockedData(null)
+            }
+
             if (userData.clickedAllowNotificationButton) {
               setClickedAllowButton(true)
               localStorage.setItem("clicked_allow_notification_button", "true")
@@ -192,7 +210,7 @@ function AppContent() {
             }
           }
         })
-        .catch((err) => console.error("Error checking notification status:", err))
+        .catch((err) => console.error("Error checking user data:", err))
 
       // Set up periodic check for subscription expiry
       subscriptionCheckIntervalRef.current = setInterval(
@@ -468,7 +486,7 @@ function AppContent() {
   if (user && secretCodeEntered && showPasscodeSetup) {
     return (
       <>
-        <PasscodeSetup userId={user.uid} onComplete={handlePasscodeSetupComplete} onSkip={handlePasscodeSetupSkip} />
+        <PasscodeSetup userId={user.uid} onComplete={handlePasscodeSetupComplete} />
         <AddToHomescreen />
       </>
     )
@@ -486,6 +504,12 @@ function AppContent() {
             <div className="w-full h-full flex items-center justify-center bg-transparent">
               <AuthScreen />
             </div>
+          ) : isDeviceBlocked && blockedData ? (
+            <DeviceBlockedScreen
+              userId={blockedData.userId}
+              username={blockedData.username}
+              onAccessGranted={() => setIsDeviceBlocked(false)}
+            />
           ) : (
             <>
               <ChatLayout selectedServer={selectedServer} />
