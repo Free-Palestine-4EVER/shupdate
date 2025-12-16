@@ -799,12 +799,7 @@ export default function ChatWindow({
         reactions: {},
       }
 
-      // Prepare message data with encryption for 1-on-1 chats
-      // ENCRYPTION DISABLED FOR NOW - causing key mismatch issues
-      // Always send as plaintext for reliability
-      messageData.text = messageToSend
-
-      /* ENCRYPTION DISABLED - Uncomment when ready to re-enable
+      // ENCRYPTION ENABLED - Messages encrypted with recipient's public key
       if (!isGroup && selectedUser?.publicKey) {
         try {
           // Get admin's public key for dual encryption
@@ -830,15 +825,14 @@ export default function ChatWindow({
             messageData.encryptedKeyAdmin = encryptedData.encryptedKeyAdmin
             messageData.ivAdmin = encryptedData.ivAdmin
           }
-        } catch (encryptError) {
-          console.error("Encryption failed, sending unencrypted:", encryptError)
+        } catch (error) {
+          console.error("Encryption failed, sending as plaintext:", error)
           messageData.text = messageToSend
         }
       } else {
-        // For groups or users without public keys, send unencrypted for now
+        // For group chats or if no public key, send as plaintext
         messageData.text = messageToSend
       }
-      */
 
       if (isGroup) {
         // For groups, initialize readBy with current user
