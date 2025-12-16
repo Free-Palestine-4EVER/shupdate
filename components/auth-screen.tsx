@@ -143,8 +143,11 @@ export default function AuthScreen() {
           // Check if we have the private key locally, if not we need to regenerate
           const hasKeys = await hasEncryptionKeys(user.uid)
           if (!hasKeys) {
-            // If we still don't have keys (and didn't adopt one just now)
-            console.log("Local private key missing. User must restore via passcode or manual reset.")
+            console.log("Local private key missing. Generating new key pair to restore functionality...")
+            const { publicKey, privateKey } = await generateKeyPair()
+            await storePrivateKey(user.uid, privateKey)
+            updatedData.publicKey = publicKey
+            console.log("New encryption keys generated and stored.")
           }
         }
 
