@@ -458,7 +458,7 @@ export default function Sidebar({
               border: "1px solid rgba(51, 65, 85, 0.5)",
               borderRadius: "12px",
               color: "white",
-              fontSize: "14px",
+              fontSize: isMobileView ? "16px" : "14px",
               outline: "none",
             }}
           />

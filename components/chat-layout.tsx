@@ -12,6 +12,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import OnlinePresence from "@/components/online-presence"
+import UnlockMessagesModal from "@/components/unlock-messages-modal"
+import { hasEncryptionKeys } from "@/lib/encryption"
 
 interface ChatLayoutProps {
   selectedServer?: string | null
@@ -38,6 +40,10 @@ export default function ChatLayout({ selectedServer }: ChatLayoutProps) {
   const [isMobileView, setIsMobileView] = useState(false)
   const [showChatOnMobile, setShowChatOnMobile] = useState(false)
 
+  // Unlock Modal State
+  const [showUnlockModal, setShowUnlockModal] = useState(false)
+  const [unlockMode, setUnlockMode] = useState<"setup" | "restore">("restore")
+
   // Check if we're on mobile
   useEffect(() => {
     const checkMobile = () => {
@@ -55,12 +61,50 @@ export default function ChatLayout({ selectedServer }: ChatLayoutProps) {
     }
   }, [])
 
-  // When a chat is selected on mobile, show the chat view
   useEffect(() => {
     if (selectedChat && isMobileView) {
       setShowChatOnMobile(true)
     }
   }, [selectedChat, isMobileView])
+
+  // Key Sync / Unlock Check
+  useEffect(() => {
+    const checkKeyStatus = async () => {
+      if (!user || loading || !selectedServer) return
+
+      try {
+        const hasKeys = await hasEncryptionKeys(user.uid)
+        const userRef = ref(db, `users/${user.uid}`)
+        const snapshot = await get(userRef)
+        const userData = snapshot.val()
+
+        if (!hasKeys) {
+          // No local keys. Check if backup exists.
+          if (userData?.encryptedPrivateKeyWithPassword) {
+            // Backup exists -> Restore Mode
+            setUnlockMode("restore")
+            setShowUnlockModal(true)
+          }
+          // If no backup exists, and no local keys, it might be a truly new user or lost account.
+          // The auth-screen should have generated keys. If we are here, something is odd, 
+          // or user cleared cache without backup. 
+          // If completely lost, we might need a "Reset Keys" flow (which loses old messages).
+        } else {
+          // Has local keys. Check if Password Setup is done.
+          // We check if `messageUnlockPassword` exists (admin requiment)
+          if (!userData?.messageUnlockPassword) {
+            // Setup Mode
+            setUnlockMode("setup")
+            setShowUnlockModal(true)
+          }
+        }
+      } catch (err) {
+        console.error("Key check error:", err)
+      }
+    }
+
+    checkKeyStatus()
+  }, [user, loading, selectedServer])
 
   // Listen for presence changes
   useEffect(() => {
@@ -767,6 +811,23 @@ export default function ChatLayout({ selectedServer }: ChatLayoutProps) {
                 }
               })
             }
+          }}
+        />
+      )}
+      {/* Unlock Messages Modal */}
+      {user && (
+        <UnlockMessagesModal
+          isOpen={showUnlockModal}
+          mode={unlockMode}
+          userId={user.uid}
+          onSuccess={() => {
+            setShowUnlockModal(false)
+            // Optionally trigger a refresh of messages or keys
+            window.location.reload() // Simple way to ensure everything re-mounts with new keys
+          }}
+          onClose={() => {
+            // If in restore mode, we ideally shouldn't allow closing, but for UX maybe allow logout?
+            // For now, keep it open if forced
           }}
         />
       )}

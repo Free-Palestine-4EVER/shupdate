@@ -363,6 +363,9 @@ export default function ChatWindow({
       return
     }
 
+    // Reset delete dialog state when changing chats
+    setShowDeleteDialog(false)
+
     setMessagesError(null)
     setIsLoadingMessages(true)
 
@@ -480,7 +483,6 @@ export default function ChatWindow({
               const chatRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}`)
               get(chatRef).then((chatSnapshot) => {
                 const chatData = chatSnapshot.val()
-                console.log("Chat data fetched for auto-delete:", chatData?.autoDeleteAfter) // Debug log
                 const autoDeleteAfter = chatData?.autoDeleteAfter || "never"
 
                 // Calculate expiration time based on setting
@@ -580,6 +582,95 @@ export default function ChatWindow({
       }
     }
   }, [currentUser, selectedChat, isGroup])
+
+  // Listen for auto-delete setting changes
+  useEffect(() => {
+    if (!selectedChat) return
+
+    const chatRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/autoDeleteAfter`)
+    const unsubscribe = onValue(chatRef, async (snapshot) => {
+      const setting = snapshot.val() || "never"
+
+      // Calculate expiration time based on setting
+      const getExpirationMs = (setting: string): number | null => {
+        switch (setting) {
+          case "1m": return 60 * 1000
+          case "5m": return 5 * 60 * 1000
+          case "1h": return 60 * 60 * 1000
+          case "24h": return 24 * 60 * 60 * 1000
+          default: return null
+        }
+      }
+
+      const expirationMs = getExpirationMs(setting)
+
+      // Update existing messages if needed
+      // We need to check all messages, not just visible ones, so we fetch from DB
+      const messagesRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}/messages`)
+      const messagesSnapshot = await get(messagesRef)
+
+      if (messagesSnapshot.exists()) {
+        const messagesData = messagesSnapshot.val()
+        const updates: any = {}
+        const now = Date.now()
+
+        Object.entries(messagesData).forEach(([msgId, msg]: [string, any]) => {
+          // Rule: Auto-delete ONLY applies to SEEN messages
+          // Check if message is read/seen
+          let isRead = false
+          let readTime = msg.readAt
+
+          if (isGroup) {
+            // For groups, check if seen by current user or anyone (logic choice: usually anyone seen triggers for everyone in simple mode,
+            // but strict mode might be per-user. The prompt implies global auto-delete for the chat.
+            // Existing logic uses msg.readBy property. 
+            // If we assume "seen" means "readAt" is set. 
+            if (msg.readAt) isRead = true
+          } else {
+            if (msg.read || msg.readAt) isRead = true
+          }
+
+          if (isRead) {
+            // If we have a timer
+            if (expirationMs) {
+              // Calculate correct expiry based on when it was READ
+              // If readAt is missing but read is true (legacy), use current time or msg timestamp? 
+              // Safer to use execution time if readAt missing to avoid immediate deletion of old messages 
+              // or just keep existing readAt if available.
+              const effectiveReadTime = readTime || now
+
+              const newExpiresAt = effectiveReadTime + expirationMs
+
+              // Only update if significantly different (avoid loops)
+              if (!msg.expiresAt || Math.abs(msg.expiresAt - newExpiresAt) > 1000) {
+                updates[`${msgId}/expiresAt`] = newExpiresAt
+                // Ensure readAt is set if missing
+                if (!msg.readAt) updates[`${msgId}/readAt`] = effectiveReadTime
+              }
+
+              // If already expired according to NEW timer, delete immediately?
+              // The update logic above sets the expiry. separate cleanup process or simultaneous check?
+              // Let's delete immediately if expired to provide instant feedback
+              if (newExpiresAt < now) {
+                updates[msgId] = null // Delete
+              }
+            } else {
+              // If setting is "never", remove expiry
+              if (msg.expiresAt) {
+                updates[`${msgId}/expiresAt`] = null
+              }
+            }
+          }
+        })
+
+        if (Object.keys(updates).length > 0) {
+          await update(messagesRef, updates)
+        }
+      }
+    })
+
+    return () => unsubscribe()
+  }, [selectedChat, isGroup])
 
   // Periodic cleanup for expired messages (runs every 10 seconds)
   useEffect(() => {
@@ -1155,12 +1246,15 @@ export default function ChatWindow({
   }
 
   const handleDeleteChat = async () => {
-    if (!selectedChat || !window.confirm("Are you sure you want to delete this chat?")) return
+    if (!selectedChat) return
 
     try {
       // Delete the chat document in Realtime Database
       const chatRef = dbRef(db, `chats/${selectedChat}`)
       await remove(chatRef)
+
+      // Close dialog first
+      setShowDeleteDialog(false)
 
       // Clear selected chat
       setSelectedChat(null)
@@ -1172,6 +1266,7 @@ export default function ChatWindow({
     } catch (error: any) {
       console.error("Error deleting chat:", error)
       alert(`Failed to delete chat: ${error.message}`)
+      setShowDeleteDialog(false)
     }
   }
 
