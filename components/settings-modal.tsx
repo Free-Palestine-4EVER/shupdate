@@ -298,7 +298,30 @@ export default function SettingsModal({ isOpen, onClose, user, activeTab = "prof
       const { hash, salt } = generatePasscodeHash(newPasscode)
 
       // Get private key and encrypt with new passcode for cloud sync
-      const privateKey = await getPrivateKey(user.id)
+      // Get private key and encrypt with new passcode for cloud sync
+      let privateKey = await getPrivateKey(user.id)
+
+      // If we don't have the key locally but we're changing passcode, try to recover it first
+      if (!privateKey && hasPasscode && currentPasscode) {
+        console.log("Local key missing, attempting to recover from encrypted backup before re-encrypting...")
+        const userRef = dbRef(db, `users/${user.id}`)
+        const snapshot = await get(userRef)
+        const userData = snapshot.val()
+
+        if (userData.encryptedPrivateKey) {
+          try {
+            const { decryptPrivateKeyWithPasscode } = await import("@/lib/encryption")
+            privateKey = await decryptPrivateKeyWithPasscode(userData.encryptedPrivateKey, currentPasscode)
+            console.log("Successfully recovered private key for re-encryption")
+            // Store it locally while we are at it
+            const { storePrivateKey } = await import("@/lib/encryption")
+            await storePrivateKey(user.id, privateKey)
+          } catch (err) {
+            console.error("Failed to recover private key with old passcode:", err)
+          }
+        }
+      }
+
       let encryptedKeyData = null
 
       if (privateKey) {
