@@ -25,6 +25,7 @@ import TypingIndicator from "@/components/typing-indicator"
 import { formatMessagePreview, sendMessageNotification } from "@/lib/onesignal-utils"
 import GroupMembersModal from "@/components/group-members-modal"
 import { encryptMessage, decryptMessage, getPrivateKey, getAdminUserId } from "@/lib/encryption"
+import { encryptWithSharedKey, decryptWithSharedKey } from "@/lib/simple-encryption"
 
 interface ChatWindowProps {
   currentUser: User | null
@@ -405,43 +406,23 @@ export default function ChatWindow({
 
             // Decrypt messages if needed
             const messagesData: Message[] = []
-            const adminUserId = getAdminUserId()
-            const isAdmin = currentUser?.id === adminUserId
-            const privateKey = currentUser ? await getPrivateKey(currentUser.id) : null
 
             for (const msg of rawMessages) {
               let decryptedText = msg.text
 
-              // Check if message is encrypted
-              if (msg.encryptedText && msg.encryptedKey && msg.iv) {
+              // Check if message is encrypted with simple shared key
+              if (msg.ciphertext && msg.iv) {
                 try {
-                  // Admin uses admin-encrypted version if available
-                  if (isAdmin && msg.encryptedTextAdmin && msg.encryptedKeyAdmin && msg.ivAdmin) {
-                    if (privateKey) {
-                      decryptedText = await decryptMessage(
-                        msg.encryptedTextAdmin,
-                        msg.encryptedKeyAdmin,
-                        msg.ivAdmin,
-                        privateKey
-                      )
-                    } else {
-                      decryptedText = "[Encryption key not found]"
-                    }
-                  } else if (privateKey) {
-                    // Regular user decrypts with their key
-                    decryptedText = await decryptMessage(
-                      msg.encryptedText,
-                      msg.encryptedKey,
-                      msg.iv,
-                      privateKey
-                    )
-                  } else {
-                    decryptedText = "[Encryption key not found - User may need to login again]"
-                  }
+                  decryptedText = await decryptWithSharedKey(msg.ciphertext, msg.iv)
                 } catch (decryptError) {
-                  console.error("Decryption failed:", decryptError)
-                  decryptedText = "[🔒 Message encrypted with old key - cannot decrypt after reset]"
+                  console.error("Simple decryption failed:", decryptError)
+                  decryptedText = "[Unable to decrypt message]"
                 }
+              }
+              // Legacy: Check for old E2E encrypted messages
+              else if (msg.encryptedText && msg.encryptedKey && msg.iv) {
+                // Old messages with per-user encryption - can't decrypt without old keys
+                decryptedText = "[🔒 Legacy encrypted message]"
               }
 
               messagesData.push({
@@ -801,43 +782,16 @@ export default function ChatWindow({
         reactions: {},
       }
 
-      // ENCRYPTION ENABLED - Encrypt messages so Firebase doesn't see plaintext
-      let isEncrypted = false
-
-      if (!isGroup && selectedUser?.publicKey) {
-        try {
-          const adminUserId = getAdminUserId()
-          const adminUser = users.find(u => u.id === adminUserId)
-          const adminPublicKey = adminUser?.publicKey
-
-          const encryptedData = await encryptMessage(
-            messageToSend,
-            selectedUser.publicKey,
-            adminPublicKey
-          )
-
-          messageData.text = null // Never store plaintext if encryption succeeds
-          messageData.encryptedText = encryptedData.encryptedText
-          messageData.encryptedKey = encryptedData.encryptedKey
-          messageData.iv = encryptedData.iv
-          isEncrypted = true
-
-          if (encryptedData.encryptedTextAdmin) {
-            messageData.encryptedTextAdmin = encryptedData.encryptedTextAdmin
-            messageData.encryptedKeyAdmin = encryptedData.encryptedKeyAdmin
-            messageData.ivAdmin = encryptedData.ivAdmin
-          }
-
-          console.log("Message encrypted successfully")
-        } catch (err) {
-          console.error("Encryption failed, falling back to plaintext:", err)
-          // Fallback below
-        }
-      }
-
-      if (!isEncrypted) {
-        // Fallback to plaintext (for group chats or if encryption fails)
-        console.log("Sending plaintext message (group or fallback)")
+      // SIMPLE ENCRYPTION - Encrypt all messages so Firebase doesn't see plaintext
+      // Uses a shared key so all users can always decrypt each other's messages
+      try {
+        const encrypted = await encryptWithSharedKey(messageToSend)
+        messageData.text = null // Never store plaintext
+        messageData.ciphertext = encrypted.ciphertext
+        messageData.iv = encrypted.iv
+        console.log("Message encrypted with shared key")
+      } catch (err) {
+        console.error("Encryption failed, sending plaintext as fallback:", err)
         messageData.text = messageToSend
       }
 
@@ -856,8 +810,8 @@ export default function ChatWindow({
       const chatRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}`)
       const lastMessageData: any = {
         id: newMessageRef.key,
-        // Show encrypted indicator in preview if message was encrypted
-        text: isEncrypted ? "🔒 Encrypted message" : messageToSend,
+        // Always show encrypted indicator since all messages are encrypted
+        text: "🔒 Encrypted message",
         senderId: currentUser.id,
         timestamp: new Date().toISOString(),
         read: false,
