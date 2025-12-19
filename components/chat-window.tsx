@@ -856,7 +856,8 @@ export default function ChatWindow({
       const chatRef = dbRef(db, `${isGroup ? "groups" : "chats"}/${selectedChat}`)
       const lastMessageData: any = {
         id: newMessageRef.key,
-        text: messageToSend,
+        // Show encrypted indicator in preview if message was encrypted
+        text: isEncrypted ? "🔒 Encrypted message" : messageToSend,
         senderId: currentUser.id,
         timestamp: new Date().toISOString(),
         read: false,
