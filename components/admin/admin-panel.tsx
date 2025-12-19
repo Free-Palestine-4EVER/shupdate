@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useFirebase } from "@/components/firebase-provider"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import UserManagement from "@/components/admin/user-management"
-import MessageModeration from "@/components/admin/message-moderation"
 import AnnouncementSystem from "@/components/admin/announcement-system"
 import AnalyticsDashboard from "@/components/admin/analytics-dashboard"
 import DeviceRequests from "@/components/admin/device-requests"
@@ -50,9 +49,6 @@ export default function AdminPanel() {
           <TabsTrigger value="users" className="data-[state=active]:bg-gray-800">
             User Management
           </TabsTrigger>
-          <TabsTrigger value="messages" className="data-[state=active]:bg-gray-800">
-            Message Moderation
-          </TabsTrigger>
           <TabsTrigger value="announcements" className="data-[state=active]:bg-gray-800">
             Announcements
           </TabsTrigger>
@@ -68,10 +64,6 @@ export default function AdminPanel() {
 
           <TabsContent value="users" className="h-full mt-0">
             <UserManagement />
-          </TabsContent>
-
-          <TabsContent value="messages" className="h-full mt-0">
-            <MessageModeration />
           </TabsContent>
 
           <TabsContent value="announcements" className="h-full mt-0">

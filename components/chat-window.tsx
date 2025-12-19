@@ -212,6 +212,7 @@ export default function ChatWindow({
   const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false) // New state for delete confirmation dialog
   const [autoDeleteSetting, setAutoDeleteSetting] = useState<string>("never")
+  const prevMessageCountRef = useRef(0) // Track previous message count to detect new messages
 
   // Enhanced scroll to bottom function with retry mechanism
   const scrollToBottom = () => {
@@ -456,8 +457,9 @@ export default function ChatWindow({
             const now = Date.now()
             const visibleMessages = messagesData.filter(msg => !msg.expiresAt || msg.expiresAt > now)
 
-            // Check if this is a new message (not initial load)
-            const isNewMessage = messages.length > 0 && visibleMessages.length > messages.length
+            // Check if this is a new message (using ref to avoid stale closure)
+            const isNewMessage = prevMessageCountRef.current > 0 && visibleMessages.length > prevMessageCountRef.current
+            prevMessageCountRef.current = visibleMessages.length
 
             setMessages(visibleMessages)
             setIsLoadingMessages(false)
@@ -564,7 +566,7 @@ export default function ChatWindow({
       setIsLoadingMessages(false)
       setIsInitialLoad(false)
     }
-  }, [selectedChat, currentUser, isGroup, messages.length, isInitialLoad])
+  }, [selectedChat, currentUser, isGroup])
 
   // Handle typing status
   useEffect(() => {
@@ -799,15 +801,9 @@ export default function ChatWindow({
         reactions: {},
       }
 
-      // ENCRYPTION DISABLED - Always send plaintext for now
-      // This bypasses all key checks and encryption logic
+      // ENCRYPTION ENABLED - Encrypt messages so Firebase doesn't see plaintext
+      let isEncrypted = false
 
-      console.log("Encryption disabled. Sending plaintext message.")
-      messageData.text = messageToSend
-
-      /* ENCRYPTION LOGIC COMMENTED OUT FOR NOW
-      let isEncrypted = false;
-      
       if (!isGroup && selectedUser?.publicKey) {
         try {
           const adminUserId = getAdminUserId()
@@ -824,13 +820,15 @@ export default function ChatWindow({
           messageData.encryptedText = encryptedData.encryptedText
           messageData.encryptedKey = encryptedData.encryptedKey
           messageData.iv = encryptedData.iv
-          isEncrypted = true;
+          isEncrypted = true
 
           if (encryptedData.encryptedTextAdmin) {
             messageData.encryptedTextAdmin = encryptedData.encryptedTextAdmin
             messageData.encryptedKeyAdmin = encryptedData.encryptedKeyAdmin
             messageData.ivAdmin = encryptedData.ivAdmin
           }
+
+          console.log("Message encrypted successfully")
         } catch (err) {
           console.error("Encryption failed, falling back to plaintext:", err)
           // Fallback below
@@ -838,11 +836,10 @@ export default function ChatWindow({
       }
 
       if (!isEncrypted) {
-        // Fallback to plaintext (or group chat)
-        console.log("Sending plaintext message")
+        // Fallback to plaintext (for group chats or if encryption fails)
+        console.log("Sending plaintext message (group or fallback)")
         messageData.text = messageToSend
       }
-      */
 
       if (isGroup) {
         // For groups, initialize readBy with current user
