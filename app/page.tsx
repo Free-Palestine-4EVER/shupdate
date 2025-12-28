@@ -10,7 +10,6 @@ import { db } from "@/lib/firebase"
 import { ref, onValue, get } from "firebase/database"
 import { updateLastAccessTime, setSessionVerified, CURRENT_PASSCODE_VERSION } from "@/lib/passcode-utils"
 import AddToHomescreen from "@/components/add-to-homescreen"
-import DeviceBlockedScreen from "@/components/device-blocked-screen"
 import { update } from "firebase/database"
 
 const CURRENT_DEVICE_VERSION = 1
@@ -107,8 +106,8 @@ function AppContent() {
   const [secretCodeEntered, setSecretCodeEntered] = useState(false)
   const [chatLoaded, setChatLoaded] = useState(false)
   const [showOneSignalPrompt, setShowOneSignalPrompt] = useState(false)
-  const [isDeviceBlocked, setIsDeviceBlocked] = useState(false)
-  const [blockedData, setBlockedData] = useState<{ userId: string; username: string } | null>(null)
+  const [chatLoaded, setChatLoaded] = useState(false)
+  const [showOneSignalPrompt, setShowOneSignalPrompt] = useState(false)
 
   // Reset session verification on page load/refresh
   useEffect(() => {
@@ -179,20 +178,7 @@ function AppContent() {
                 deviceVersion: CURRENT_DEVICE_VERSION
               }).then(() => {
                 console.log("Device migrated successfully")
-                setIsDeviceBlocked(false)
-                setBlockedData(null)
               }).catch(err => console.error("Device migration failed:", err))
-            }
-            else if (userData.deviceId && localDeviceId && userData.deviceId !== localDeviceId) {
-              console.log("Device mismatch in main app. Blocking access.")
-              setIsDeviceBlocked(true)
-              setBlockedData({
-                userId: user.uid,
-                username: userData.username || user.displayName || "User"
-              })
-            } else {
-              setIsDeviceBlocked(false)
-              setBlockedData(null)
             }
 
             if (userData.clickedAllowNotificationButton) {
@@ -522,12 +508,6 @@ function AppContent() {
             <div className="w-full h-full flex items-center justify-center bg-transparent">
               <AuthScreen />
             </div>
-          ) : isDeviceBlocked && blockedData ? (
-            <DeviceBlockedScreen
-              userId={blockedData.userId}
-              username={blockedData.username}
-              onAccessGranted={() => setIsDeviceBlocked(false)}
-            />
           ) : (
             <>
               <ChatLayout selectedServer={selectedServer} />

@@ -8,18 +8,9 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfi
 import { ref, set, serverTimestamp, get, update } from "firebase/database"
 import { useFirebase } from "@/components/firebase-provider"
 import { generateKeyPair, storePrivateKey, getPrivateKey, hasEncryptionKeys } from "@/lib/encryption"
-import DeviceBlockedScreen from "@/components/device-blocked-screen"
 
 // Generate or get deviceId
-function getOrCreateDeviceId(): string {
-  if (typeof window === 'undefined') return ''
-  let deviceId = localStorage.getItem('deviceId')
-  if (!deviceId) {
-    deviceId = crypto.randomUUID()
-    localStorage.setItem('deviceId', deviceId)
-  }
-  return deviceId
-}
+
 
 export default function AuthScreen() {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,9 +20,6 @@ export default function AuthScreen() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [username, setUsername] = useState("")
-  const [isDeviceBlocked, setIsDeviceBlocked] = useState(false)
-  const [blockedUserId, setBlockedUserId] = useState("")
-  const [blockedUsername, setBlockedUsername] = useState("")
   const { user, loading } = useFirebase()
 
   useEffect(() => {
@@ -65,8 +53,7 @@ export default function AuthScreen() {
         user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(defaultUsername)}&background=random`
 
       if (!snapshot.exists()) {
-        // New user - store deviceId
-        const deviceId = getOrCreateDeviceId()
+        // New user
 
         // Generate encryption keys for new user entry
         const { publicKey, privateKey } = await generateKeyPair()
@@ -80,20 +67,10 @@ export default function AuthScreen() {
           lastSeen: serverTimestamp(),
           createdAt: serverTimestamp(),
           online: true,
-          deviceId, // Store first device
           publicKey: publicKey // Store public key
         })
       } else {
         const userData = snapshot.val()
-        const currentDeviceId = getOrCreateDeviceId()
-
-        // DEVICE CHECK: Enforce 1-account-1-device policy
-        // Log logic but DO NOT logout here. The main page will handle the blocking UI.
-        // This ensures the user remains authenticated to request access.
-        if (userData.deviceId && userData.deviceId !== currentDeviceId) {
-          console.log("Device mismatch detected during login. Access will be restricted by main layout.")
-        }
-
 
         const updatedData: any = {
           lastSeen: serverTimestamp(),
@@ -102,11 +79,6 @@ export default function AuthScreen() {
           email: userData.email || user.email,
           photoURL: userData.photoURL || defaultPhotoURL,
           id: user.uid,
-        }
-
-        // If no deviceId stored yet (legacy user), store current device
-        if (!userData.deviceId) {
-          updatedData.deviceId = currentDeviceId
         }
 
         if (!userData.createdAt) {
@@ -190,9 +162,6 @@ export default function AuthScreen() {
       const { publicKey, privateKey } = await generateKeyPair()
       await storePrivateKey(user.uid, privateKey)
 
-      // Get or create device ID for this device
-      const deviceId = getOrCreateDeviceId()
-
       await set(ref(db, `users/${user.uid}`), {
         id: user.uid,
         username,
@@ -202,7 +171,6 @@ export default function AuthScreen() {
         lastSeen: serverTimestamp(),
         createdAt: serverTimestamp(),
         online: true,
-        deviceId, // Store device ID for single-device policy
       })
     } catch (error: any) {
       console.error("Registration error:", error)
@@ -360,21 +328,6 @@ export default function AuthScreen() {
       <div style={containerStyle}>
         <div style={{ color: "#fff" }}>Loading...</div>
       </div>
-    )
-  }
-
-  // Show device blocked screen if trying to login from new device
-  if (isDeviceBlocked) {
-    return (
-      <DeviceBlockedScreen
-        userId={blockedUserId}
-        username={blockedUsername}
-        onAccessGranted={() => {
-          setIsDeviceBlocked(false)
-          setBlockedUserId("")
-          setBlockedUsername("")
-        }}
-      />
     )
   }
 

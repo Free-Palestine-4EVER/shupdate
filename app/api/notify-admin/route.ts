@@ -14,67 +14,7 @@ export async function POST(request: Request) {
     const { type, username, email, userId, timestamp, message } = body
 
     // Handle device access request notification
-    if (type === "device_request") {
-      // Send push notification to admin via OneSignal
-      try {
-        const oneSignalAppId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID
-        const oneSignalApiKey = process.env.ONESIGNAL_REST_API_KEY
 
-        if (oneSignalAppId && oneSignalApiKey) {
-          const response = await fetch("https://onesignal.com/api/v1/notifications", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Basic ${oneSignalApiKey}`
-            },
-            body: JSON.stringify({
-              app_id: oneSignalAppId,
-              include_external_user_ids: [ADMIN_USER_ID],
-              contents: { en: message || `New device access request from ${username}` },
-              headings: { en: "🔐 Device Access Request" },
-              url: `${process.env.NEXT_PUBLIC_VERCEL_URL || "https://your-app.com"}/admin`
-            })
-          })
-
-          const result = await response.json()
-          console.log("OneSignal notification sent:", result)
-        }
-      } catch (pushErr) {
-        console.error("Failed to send push notification:", pushErr)
-      }
-
-      // Also send email notification
-      try {
-        await resend.emails.send({
-          from: "onboarding@resend.dev",
-          to: "zzeidnaser@gmail.com",
-          subject: `🔐 Device Access Request: ${username}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-              <h1 style="color: #f4427e; text-align: center; margin-bottom: 20px;">Device Access Request</h1>
-              <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                <p style="margin: 5px 0;"><strong>Username:</strong> ${username}</p>
-                <p style="margin: 5px 0;"><strong>User ID:</strong> ${userId}</p>
-                <p style="margin: 5px 0;"><strong>Request Time:</strong> ${new Date().toLocaleString()}</p>
-              </div>
-              <div style="text-align: center; margin-top: 20px;">
-                <a href="${process.env.NEXT_PUBLIC_VERCEL_URL || "https://your-app-url.com"}/admin" 
-                   style="background-color: #f4427e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                  Review Request
-                </a>
-              </div>
-              <p style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-                Log in to the admin panel to approve or deny this request.
-              </p>
-            </div>
-          `,
-        })
-      } catch (emailErr) {
-        console.error("Failed to send email:", emailErr)
-      }
-
-      return NextResponse.json({ success: true })
-    }
 
     // Handle user registration notification (existing functionality)
     const formattedDate = new Date(timestamp).toLocaleString("en-US", {
