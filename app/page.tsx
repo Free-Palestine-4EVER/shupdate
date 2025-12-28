@@ -106,8 +106,7 @@ function AppContent() {
   const [secretCodeEntered, setSecretCodeEntered] = useState(false)
   const [chatLoaded, setChatLoaded] = useState(false)
   const [showOneSignalPrompt, setShowOneSignalPrompt] = useState(false)
-  const [chatLoaded, setChatLoaded] = useState(false)
-  const [showOneSignalPrompt, setShowOneSignalPrompt] = useState(false)
+
 
   // Reset session verification on page load/refresh
   useEffect(() => {
